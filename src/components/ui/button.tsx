@@ -1,17 +1,3 @@
-The provided code is nearly complete and follows best practices. However, the placeholder `cn` utility for className merging is imported but not defined here. Since the instructions are to provide the complete, functional code for the file **`src/components/ui/button.tsx`**, I will include a suitable inline definition or an import comment for `cn`.
-
-Typically, `cn` (short for "className") is a utility function to conditionally join class names, often implemented with libraries like `clsx` or `classnames`.
-
-To make this file fully functional and production-ready:
-
-- I will provide a simple `cn` implementation using `clsx` (preferred for clean name merging).
-- Assume `clsx` is installed (`npm i clsx` or `yarn add clsx`).
-- The rest of the code is fine as-is, uses the `cva` pattern correctly.
-- Add JSDoc for the component for better maintainability.
-
-Here is the complete code with the `cn` implementation included.
-
-```tsx
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -86,14 +72,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
-```
-
----
-
-### Explanation:
-- Added `clsx` import and a `cn` function that wraps `clsx`.
-- Updated `cn` usage in the component — pass `buttonVariants({...})` first, then `className` second so additional classes from props can override.
-- Added JSDoc comments for clarity.
-- No other placeholders were presented in your code; all are replaced and ready for production use.
-
-If your project already has a `cn` utility elsewhere (often in `src/lib/utils.ts`), then you can just import it as you originally did. But to be fully self-contained and functional, the above code works as is assuming you have `clsx` installed.

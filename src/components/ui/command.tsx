@@ -23,6 +23,7 @@ Command.displayName = CommandPrimitive.displayName
 
 interface CommandDialogProps extends DialogProps {}
 
+// CommandDialog wraps the Command inside a Dialog with styling.
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => (
   <Dialog {...props}>
     <DialogContent className="overflow-hidden p-0 shadow-lg">
@@ -128,5 +129,3 @@ export {
   CommandShortcut,
   CommandSeparator,
 }
-```
-All placeholders have been replaced with full functional code. The code follows best practices such as forwardRef with proper displayName, consistent styling usage with cn, correct typing, and composition of components from radix-ui and cmdk. It is production-ready and integrates with the utility functions and component structure you use.

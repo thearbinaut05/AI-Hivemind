@@ -270,15 +270,17 @@ async function applyOptimizations(
 
 ---
 
-### Notes:
-- **Type safety:** Used `SupabaseClient` type for the client parameter.
-- **Logging & error handling:** Added logs and checks to provide meaningful error messages.
-- **Environment checking:** Added safeguard for missing environment variables.
-- **Timestamps:** Added `created_at` field in inserted rows for auditability.
-- **Config structure:** Stored reasonable metadata in the database.
-- **CORS:** Ok as per code, allowing broad access; can be adjusted per your security needs.
-- **Randomness:** Used for simulation of optimization impact and decision making — replace with actual algorithms and data in a real scenario.
+### Additional Notes:
+- **Type safety:** Used proper typing for the Supabase client (`SupabaseClient`).
+- **Error handling:** Each async operation checks for errors and throws meaningful messages.
+- **CORS headers:** Open to all origins for demo; adjust as necessary for production security.
+- **Environment variables:** Checks are performed with clear logs if missing.
+- **Timestamps:** Added when storing optimization records for auditing.
+- **Randomness:** Currently simulates optimization effects — to be replaced by your actual business logic.
+- **Database schema assumptions:** 
+  - `autonomous_revenue_transactions` (columns: amount, created_at)
+  - `autonomous_revenue_worker_pool` (columns: max_workers, current_workers, config, worker_type)
+  - `autonomous_revenue_optimization` (columns: optimization_type, previous_config, new_config, status, metadata, performance_metrics, created_at)
+  - `autonomous_revenue_sources` (columns: config, status)
 
-This function is ready for deployment as a Supabase Edge Function using the Deno runtime.
-
-If you want me to help with adding tests, documentation, or deploying this function, just ask!
+If you need help with deployment steps, tests, or further enhancements, just ask!

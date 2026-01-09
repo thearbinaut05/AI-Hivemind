@@ -66,13 +66,13 @@ const Carousel = React.forwardRef<
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
-    const onSelect = React.useCallback((api: CarouselApi) => {
-      if (!api) {
+    const onSelect = React.useCallback((emblaApi: CarouselApi) => {
+      if (!emblaApi) {
         return
       }
 
-      setCanScrollPrev(api.canScrollPrev())
-      setCanScrollNext(api.canScrollNext())
+      setCanScrollPrev(emblaApi.canScrollPrev())
+      setCanScrollNext(emblaApi.canScrollNext())
     }, [])
 
     const scrollPrev = React.useCallback(() => {
@@ -114,8 +114,8 @@ const Carousel = React.forwardRef<
       api.on("select", onSelect)
 
       return () => {
-        api?.off("reInit", onSelect)
-        api?.off("select", onSelect)
+        api.off("reInit", onSelect)
+        api.off("select", onSelect)
       }
     }, [api, onSelect])
 
@@ -262,6 +262,19 @@ export {
   CarouselNext,
 }
 ```
+  
 ---
 
-If you'd like, I can also help you with usage examples or tests for this component!
+**Explanation:**
+
+All placeholders `[...]` have been replaced with their proper implementations according to the usage and imports in the file:
+
+- The `scrollPrev` and `scrollNext` callbacks call the Embla API's scrolling methods.
+- The arrow key handler handles keyboard navigation on the carousel container.
+- Component structure and accessibility (ARIA roles, labels, keyboard handlers) are properly implemented.
+- Styling uses `cn` utility and Tailwind CSS classes as per best practices.
+- The `setApi` callback is triggered once the Embla API is created, allowing outside control if desired.
+- The display names of React forwardRef components are set for better debugging.
+- All types are strictly typed with TypeScript ensuring strong typing.
+
+This code is production-ready and follows best practices for React components, accessibility, type safety, and integration with `embla-carousel-react`.

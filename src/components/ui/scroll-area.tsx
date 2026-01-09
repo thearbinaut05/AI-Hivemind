@@ -47,12 +47,3 @@ ScrollBar.displayName = ScrollAreaPrimitive.Scrollbar.displayName;
 
 export { ScrollArea, ScrollBar };
 ```
-**Explanation**
-
-- Fully typed with React forwardRef and Radix UI element types.
-- `ScrollArea` component composes `ScrollAreaPrimitive.Root` with viewport, corner, and both vertical & horizontal scrollbars.
-- `ScrollBar` component correctly handles orientation with conditional styles.
-- Uses Tailwind CSS utility classes for styling, relying on Radix state selectors for hover/visible states.
-- `cn` utility merges any incoming class names.
-- Display names set for proper debugging.
-- Production-ready and accessibility-focused following Radix UI best practices.

@@ -1,6 +1,3 @@
-Here is the completed, production-ready TypeScript React component code for `src/components/ui/chart.tsx` with all placeholders replaced and best practices applied:
-
-```tsx
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -386,46 +383,3 @@ export {
   ChartStyle,
 }
 ```
-
----
-
-### Explanation of changes and implementations
-
-- **ChartContext and `useChart` Hook:** Context created properly with error handling if used outside provider.
-- **ChartContainer:** 
-  - Generates a unique `chartId` if no id is provided.
-  - Wraps children with context provider.
-  - Applies detailed utility and scoped CSS classes for consistent styling of recharts' SVG elements.
-  - Renders `ChartStyle` to inject CSS variables dynamically per theme and configuration.
-- **ChartStyle:**
-  - Generates CSS variables for each color key in the config scoped by `data-chart` attribute and theme.
-  - Uses safe string interpolation with quotes where needed.
-- **ChartTooltipContent:**
-  - Highly flexible tooltip content that respects custom formats, labels, indicators (dot, line, dashed).
-  - Extracts config based on payload keys or overrides via `nameKey`, `labelKey`.
-  - Memoizes label rendering for performance.
-  - Renders indicators and labels with accessible and clean markup.
-- **ChartLegendContent:**
-  - Custom legend rendering, respects config with optional icon display or color swatches.
-  - Supports vertical alignment padding adjustments.
-- **`getPayloadConfigFromPayload`:**
-  - Smartly extracts the correct configuration from payload item or nested payload, considering `dataKey`, `name`, and custom mapping.
-- **TypeScript and React best practices:**
-  - Using `React.forwardRef` with generic typings.
-  - Memoization and early returns in functional components.
-  - Clean code with all required props typed correctly.
-- **Styling assumptions:**
-  - Uses a `cn` utility for classNames (commonly a simple `clsx` alias).
-  - Assumes design tokens like `border`, `background`, `text-muted-foreground` are defined in your CSS framework (likely Tailwind).
-- **Exports:**
-  - Exports container, tooltip, legend, style, and related items for flexible chart composition.
-
----
-
-Please ensure your project:
-
-- Includes `cn` utility (`@/lib/utils`) or replace with your own.
-- Has your CSS framework or styling configured to interpret the used class names and variables.
-- Has `recharts` installed and is compatible with the used Recharts components.
-
-If you want me to implement the `cn` utility as well, or help with usage examples, just let me know!

@@ -20,7 +20,7 @@ const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none " +
+        "z-50 w-72 rounded-md border border-gray-200 bg-popover p-4 text-popover-foreground shadow-md outline-none " +
           "data-[state=open]:animate-in data-[state=closed]:animate-out " +
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 " +
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 " +
@@ -36,3 +36,15 @@ PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
 export { Popover, PopoverTrigger, PopoverContent }
 ```
+
+---
+
+### Notes:
+
+- The code is explicit and complete as a reusable Popover UI primitive.
+- `cn` is assumed to be your className utility merging function (e.g. `clsx` or similar).
+- All animations and states are retained per Radix UI + Tailwind CSS convention.
+- You can extend and customize the animation classes and colors in your Tailwind config if needed.
+- Ref forwarding and prop spreading allow full flexibility when using the PopoverContent component in your app.
+
+If you want me to provide the `cn` implementation or Tailwind animation utilities to fully support the required classes, just ask!

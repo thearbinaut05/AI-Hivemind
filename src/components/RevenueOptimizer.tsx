@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { 
-  Zap, 
-  TrendingUp, 
-  Target, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import {
+  Zap,
+  TrendingUp,
+  Target,
   Activity,
   CheckCircle,
-  AlertTriangle,
   ArrowUp,
   Settings,
-  Cpu
-} from "lucide-react";
+  Cpu,
+} from 'lucide-react';
 
 interface OptimizationResult {
   id: string;
@@ -35,15 +39,17 @@ const RevenueOptimizer = () => {
   const [optimizationStats, setOptimizationStats] = useState({
     total_improvements: 0,
     avg_impact: 0,
-    success_rate: 0
+    success_rate: 0,
   });
 
+  // Load optimizations initially and set interval to refresh every 30 seconds
   useEffect(() => {
     loadOptimizations();
     const interval = setInterval(loadOptimizations, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch optimizations from Supabase
   const loadOptimizations = async () => {
     try {
       const { data, error } = await supabase
@@ -55,8 +61,8 @@ const RevenueOptimizer = () => {
       if (error) throw error;
 
       if (data) {
-        // Transform the data to match our interface
-        const transformedData: OptimizationResult[] = data.map(item => ({
+        // Map raw data to interface structure for consistent usage
+        const transformedData: OptimizationResult[] = data.map((item) => ({
           id: item.id,
           type: item.optimization_type,
           strategy: item.optimization_type,
@@ -65,28 +71,37 @@ const RevenueOptimizer = () => {
           status: item.status as 'pending' | 'applied' | 'reverted',
           created_at: item.created_at,
           metadata: item.metadata,
-          performance_metrics: item.performance_metrics
+          performance_metrics: item.performance_metrics,
         }));
 
         setOptimizations(transformedData);
 
-        // Calculate stats
-        const totalImprovements = transformedData.filter(o => o.status === 'applied').length;
-        const avgImpact = transformedData.length === 0 ? 0 : transformedData.reduce((sum, o) => sum + (o.impact || 0), 0) / transformedData.length;
-        const successRate = transformedData.length === 0 ? 0 : (totalImprovements / transformedData.length) * 100;
+        // Compute stats based on loaded data
+        const totalImprovements = transformedData.filter(
+          (o) => o.status === 'applied'
+        ).length;
+        const avgImpact =
+          transformedData.length === 0
+            ? 0
+            : transformedData.reduce((sum, o) => sum + (o.impact || 0), 0) /
+              transformedData.length;
+        const successRate =
+          transformedData.length === 0
+            ? 0
+            : (totalImprovements / transformedData.length) * 100;
 
         setOptimizationStats({
           total_improvements: totalImprovements,
           avg_impact: avgImpact || 0,
-          success_rate: successRate || 0
+          success_rate: successRate || 0,
         });
       } else {
-        // no data, clear state
+        // Clear state if no data found
         setOptimizations([]);
         setOptimizationStats({
           total_improvements: 0,
           avg_impact: 0,
-          success_rate: 0
+          success_rate: 0,
         });
       }
     } catch (error) {
@@ -95,10 +110,10 @@ const RevenueOptimizer = () => {
     }
   };
 
+  // Trigger revenue optimization function
   const runOptimization = async () => {
     setIsOptimizing(true);
     try {
-      // Supabase functions.invoke might be imported differently depending on version
       const { data, error } = await supabase.functions.invoke('revenue-optimizer', {
         body: JSON.stringify({ action: 'optimize_all' }),
         headers: { 'Content-Type': 'application/json' },
@@ -107,7 +122,9 @@ const RevenueOptimizer = () => {
       if (error) throw error;
 
       if (data?.success) {
-        toast.success(`🚀 Optimization complete! Applied ${data.optimizations_applied} improvements`);
+        toast.success(
+          `🚀 Optimization complete! Applied ${data.optimizations_applied} improvements`
+        );
         await loadOptimizations();
       } else {
         toast.error(data?.message || 'Optimization failed');
@@ -120,12 +137,13 @@ const RevenueOptimizer = () => {
     }
   };
 
+  // Revert a specific optimization
   const revertOptimization = async (optimizationId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('revenue-optimizer', {
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'revert',
-          optimization_id: optimizationId
+          optimization_id: optimizationId,
         }),
         headers: { 'Content-Type': 'application/json' },
       });
@@ -203,7 +221,9 @@ const RevenueOptimizer = () => {
               ) : (
                 <Zap className="h-5 w-5 mr-2" />
               )}
-              {isOptimizing ? 'Optimizing Revenue Streams...' : 'RUN MAXIMUM OPTIMIZATION'}
+              {isOptimizing
+                ? 'Optimizing Revenue Streams...'
+                : 'RUN MAXIMUM OPTIMIZATION'}
             </Button>
           </div>
 
@@ -215,21 +235,28 @@ const RevenueOptimizer = () => {
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {optimizations.map((optimization) => (
-                <div 
+                <div
                   key={optimization.id}
                   className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      optimization.status === 'applied' ? 'bg-green-400' :
-                      optimization.status === 'pending' ? 'bg-yellow-400' : 'bg-red-400'
-                    }`}></div>
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        optimization.status === 'applied'
+                          ? 'bg-green-400'
+                          : optimization.status === 'pending'
+                          ? 'bg-yellow-400'
+                          : 'bg-red-400'
+                      }`}
+                    ></div>
                     <div>
                       <p className="text-white font-medium capitalize">
                         {optimization.type.replace(/_/g, ' ')}
                       </p>
                       <p className="text-slate-400 text-sm">
-                        {optimization.metadata?.description || 'Performance optimization'} •{' '}
+                        {optimization.metadata?.description ||
+                          'Performance optimization'}{' '}
+                        &bull;{' '}
                         {new Date(optimization.created_at).toLocaleTimeString()}
                       </p>
                     </div>
@@ -240,11 +267,16 @@ const RevenueOptimizer = () => {
                         <ArrowUp className="h-3 w-3 mr-1" />
                         +{optimization.impact?.toFixed(1) || '0.0'}%
                       </div>
-                      <Badge 
-                        variant={optimization.status === 'applied' ? 'default' : 'secondary'}
+                      <Badge
+                        variant={
+                          optimization.status === 'applied' ? 'default' : 'secondary'
+                        }
                         className={
-                          optimization.status === 'applied' ? 'bg-green-600' :
-                          optimization.status === 'pending' ? 'bg-yellow-600' : 'bg-red-600'
+                          optimization.status === 'applied'
+                            ? 'bg-green-600'
+                            : optimization.status === 'pending'
+                            ? 'bg-yellow-600'
+                            : 'bg-red-600'
                         }
                       >
                         {optimization.status}
@@ -263,7 +295,7 @@ const RevenueOptimizer = () => {
                   </div>
                 </div>
               ))}
-              
+
               {optimizations.length === 0 && (
                 <div className="text-center py-8 text-slate-400">
                   <Cpu className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -279,3 +311,4 @@ const RevenueOptimizer = () => {
 };
 
 export default RevenueOptimizer;
+```

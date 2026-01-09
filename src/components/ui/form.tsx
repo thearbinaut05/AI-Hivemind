@@ -1,6 +1,3 @@
-Here is the complete and production-ready `src/components/ui/form.tsx` file with all placeholders replaced, following best practices and ready to use as a reusable form UI built on React Hook Form and Radix UI primitives:
-
-```tsx
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
@@ -216,17 +213,3 @@ export {
   FormMessage,
   FormField,
 };
-```
-
----
-
-### Notes:
-
-- The `cn` function is assumed to be your utility for conditionally joining class names.
-- `Label` is imported from your UI components; it's a styled wrapper over Radix UI's `LabelRoot`.
-- `useFormField` enforces usage within the proper context.
-- All components forward refs properly to support React best practices.
-- Descriptive IDs with consistent suffixes are generated with React's `useId()` to link controls, labels, descriptions, and error messages for accessibility.
-- This form system integrates seamlessly with React Hook Form and Radix UI primitives.
-
-Feel free to ask if you want usage examples, TypeScript improvements, or JSDoc comments!

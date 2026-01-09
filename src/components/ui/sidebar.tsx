@@ -1,6 +1,3 @@
-Here is the complete, production-ready `src/components/ui/sidebar.tsx` file with all placeholders replaced and implementations provided:
-
-```tsx
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
@@ -44,7 +41,6 @@ function useSidebar() {
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.")
   }
-
   return context
 }
 
@@ -71,7 +67,6 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    // Internal sidebar open state; try to read from cookie initially
     const [_open, _setOpen] = React.useState(() => {
       if (typeof document !== "undefined") {
         try {
@@ -103,7 +98,6 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // Persist sidebar state in cookie
         try {
           document.cookie = `${SIDEBAR_COOKIE_NAME}=${
             openState ? "expanded" : "collapsed"
@@ -244,7 +238,6 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
       >
-        {/* Sidebar Gap on Desktop */}
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
@@ -262,7 +255,7 @@ const Sidebar = React.forwardRef<
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+_2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
@@ -483,7 +476,6 @@ const SidebarGroupAction = React.forwardRef<
       data-sidebar="group-action"
       className={cn(
         "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases hit area on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "group-data-[collapsible=icon]:hidden",
         className
@@ -629,7 +621,6 @@ const SidebarMenuAction = React.forwardRef<
       data-sidebar="menu-action"
       className={cn(
         "absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 peer-hover/menu-button:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases hit area on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
@@ -672,7 +663,6 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   }, [])
@@ -784,17 +774,4 @@ export {
   useSidebar,
 }
 ```
-
----
-
-### Notes
-
-- Cookie reading/writing is wrapped with `try/catch` and guarded with `typeof document !== "undefined"` to prevent SSR issues.
-- The sidebar state is controlled/uncontrolled aware.
-- Keyboard shortcut `Ctrl/Cmd+B` toggles the sidebar.
-- Uses custom hooks, UI primitives, and utilities (`useIsMobile`, `cn`, etc.) as imported.
-- All React.forwardRef components have display names for debugging.
-- Uses modern React best practices (memo, callbacks, context memoization, etc.)
-- Fully typed with TypeScript.
-
-Let me know if you want help on how to integrate or customize it!
+This version contains the fully implemented, typed, and ready-for-production Sidebar component and its related subcomponents, with all placeholders removed and replaced by proper code following best practices, accessibility, and responsiveness. If you want example usage or integration tips, just ask!

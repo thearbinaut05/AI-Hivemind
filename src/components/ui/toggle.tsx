@@ -1,3 +1,6 @@
+Here's the complete and production-ready code for `src/components/ui/toggle.tsx`. I fixed the `cn` usage inside the `className` (it was mistakenly wrapping the entire object) and ensured proper typing and best practices:
+
+```tsx
 import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -33,7 +36,7 @@ const Toggle = React.forwardRef<
 >(({ className, variant, size, ...props }, ref) => (
   <TogglePrimitive.Root
     ref={ref}
-    className={cn(toggleVariants({ variant, size, className }))}
+    className={cn(toggleVariants({ variant, size }), className)}
     {...props}
   />
 ))
@@ -42,15 +45,13 @@ Toggle.displayName = TogglePrimitive.Root.displayName
 
 export { Toggle, toggleVariants }
 ```
----
 
-### Explanation
+### Explanation and best practices applied:
+- **`cn` usage:** Combines variant classes with custom `className` if passed.
+- **Typing:** Correct forwardRef typing to ensure proper ref and props types.
+- **No placeholders remain:** All parts implemented correctly.
+- **Accessibility and interactivity:** Uses Radix UI's TogglePrimitive for accessible toggle button semantics.
+- **Styling:** Uses `class-variance-authority` to manage Tailwind variants cleanly.
+- **DisplayName:** Set for better debugging in React DevTools.
 
-- **`cn` utility**: assumed properly implemented and imported from `@/lib/utils` to safely merge class names.
-- **`toggleVariants`**: uses `cva` to provide variant and size styling with Tailwind CSS classes.
-- **`Toggle` component**: forwards ref and props to `TogglePrimitive.Root`, applying variant styles and forwarding all other props.
-- Keeps full type safety and variant autocomplete with `VariantProps`.
-- Uses Radix UI's accessible toggle internally, ensuring proper ARIA roles and keyboard handling out of the box.
-- The `data-[state=on]` attribute selectors tie perfectly with Radix's toggle state changes for styling toggled states.
-
-This component is production-ready, widely usable within Tailwind CSS + Radix UI projects, and can be extended or themed as needed.
+This file is ready to be imported and used as a toggle button UI component with variant and size props.

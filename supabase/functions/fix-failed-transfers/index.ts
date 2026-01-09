@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
 serve(async (req) => {
@@ -35,12 +36,15 @@ serve(async (req) => {
 
     // Get failed transfers that need fixing
     const { data: failedTransfers, error: fetchError } = await supabaseClient
-      .from('transfer_attempts')
-      .select('*')
-      .eq('status', 'failed')
-      .lt('retry_count', 3)
-      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-      .order('amount', { ascending: false });
+      .from("transfer_attempts")
+      .select("*")
+      .eq("status", "failed")
+      .lt("retry_count", 3)
+      .gte(
+        "created_at",
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      )
+      .order("amount", { ascending: false });
 
     if (fetchError) {
       throw new Error(`Error fetching failed transfers: ${fetchError.message}`);
@@ -63,7 +67,9 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[${executionId}] Found ${failedTransfers.length} failed transfers to fix`);
+    console.log(
+      `[${executionId}] Found ${failedTransfers.length} failed transfers to fix`
+    );
 
     let fixed = 0;
     let stillFailed = 0;
@@ -79,37 +85,47 @@ serve(async (req) => {
       const transferId = transfer.id;
       const amount = transfer.amount;
       const amountUsd = amount / 100; // Convert from cents to dollars
+      const metadataExisting = transfer.metadata ?? {};
 
-      console.log(`[${executionId}] Attempting to fix transfer ${transferId} for $${amountUsd.toFixed(2)}`);
+      console.log(
+        `[${executionId}] Attempting to fix transfer ${transferId} for $${amountUsd.toFixed(
+          2
+        )}`
+      );
 
       try {
         // Retry the payout with original parameters
         const payout = await stripe.payouts.create({
           amount: amount,
-          currency: transfer.currency || 'usd',
-          method: 'standard',
-          description: `Fixed transfer: ${transfer.description || `$${amountUsd.toFixed(2)} transfer`}`,
+          currency: transfer.currency || "usd",
+          method: "standard",
+          description: `Fixed transfer: ${transfer.description || `$${amountUsd.toFixed(
+            2
+          )} transfer`}`,
           metadata: {
+            ...metadataExisting,
             original_transfer_id: transferId,
             fix_execution_id: executionId,
             fix_attempt: ((transfer.retry_count ?? 0) + 1).toString(),
             amount_usd: amountUsd.toString(),
             timestamp: new Date().toISOString(),
-            fix_workflow: 'automated',
+            fix_workflow: "automated",
           },
         });
 
-        console.log(`[${executionId}] ✅ Fixed transfer ${transferId} - New payout: ${payout.id}`);
+        console.log(
+          `[${executionId}] ✅ Fixed transfer ${transferId} - New payout: ${payout.id}`
+        );
 
         // Update the transfer as corrected
         await supabaseClient
-          .from('transfer_attempts')
+          .from("transfer_attempts")
           .update({
-            status: 'corrected',
+            status: "corrected",
             corrected_transfer_id: payout.id,
             corrected_at: new Date().toISOString(),
             metadata: {
-              ...transfer.metadata,
+              ...metadataExisting,
               corrected_payout_id: payout.id,
               corrected_at: new Date().toISOString(),
               fix_execution_id: executionId,
@@ -118,64 +134,73 @@ serve(async (req) => {
                 : undefined,
             },
           })
-          .eq('id', transferId);
+          .eq("id", transferId);
 
         fixed++;
         results.push({
           transfer_id: transferId,
           amount: amountUsd,
-          status: 'fixed',
+          status: "fixed",
           new_payout_id: payout.id,
         });
-      } catch (stripeError: any) {
-        console.error(`[${executionId}] ❌ Failed to fix transfer ${transferId}:`, stripeError.message);
+      } catch (stripeError: unknown) {
+        const errorMessage =
+          stripeError instanceof Error
+            ? stripeError.message
+            : "Unknown error while fixing transfer";
+
+        console.error(
+          `[${executionId}] ❌ Failed to fix transfer ${transferId}:`,
+          errorMessage
+        );
 
         // Update retry count and error info
         await supabaseClient
-          .from('transfer_attempts')
+          .from("transfer_attempts")
           .update({
             retry_count: (transfer.retry_count ?? 0) + 1,
-            correction_error: stripeError.message,
+            correction_error: errorMessage,
             metadata: {
-              ...transfer.metadata,
+              ...metadataExisting,
               last_fix_attempt: new Date().toISOString(),
               fix_execution_id: executionId,
-              fix_error: stripeError.message,
+              fix_error: errorMessage,
             },
           })
-          .eq('id', transferId);
+          .eq("id", transferId);
 
         stillFailed++;
         results.push({
           transfer_id: transferId,
           amount: amountUsd,
-          status: 'still_failed',
-          error: stripeError.message,
+          status: "still_failed",
+          error: errorMessage,
         });
       }
     }
 
     // Log the workflow execution
-    await supabaseClient
-      .from('workflow_runs')
-      .insert({
-        workflow_type: 'fix_failed_transfers',
-        total_processed: failedTransfers.length,
-        successful_fixes: fixed,
-        failed_fixes: stillFailed,
-        success_rate: failedTransfers.length > 0 ? (fixed / failedTransfers.length) * 100 : 0,
-        total_amount_recovered: results
-          .filter((r) => r.status === 'fixed')
-          .reduce((sum, r) => sum + r.amount * 100, 0),
-        execution_time_ms: Date.now() - parseInt(executionId.split('_')[1]),
-        completed_at: new Date().toISOString(),
-        metadata: {
-          execution_id: executionId,
-          results: results,
-        },
-      });
+    await supabaseClient.from("workflow_runs").insert({
+      workflow_type: "fix_failed_transfers",
+      total_processed: failedTransfers.length,
+      successful_fixes: fixed,
+      failed_fixes: stillFailed,
+      success_rate:
+        failedTransfers.length > 0 ? (fixed / failedTransfers.length) * 100 : 0,
+      total_amount_recovered: results
+        .filter((r) => r.status === "fixed")
+        .reduce((sum, r) => sum + r.amount * 100, 0),
+      execution_time_ms: Date.now() - parseInt(executionId.split("_")[1], 10),
+      completed_at: new Date().toISOString(),
+      metadata: {
+        execution_id: executionId,
+        results: results,
+      },
+    });
 
-    console.log(`[${executionId}] 🎉 Fix workflow completed: ${fixed} fixed, ${stillFailed} still failed`);
+    console.log(
+      `[${executionId}] 🎉 Fix workflow completed: ${fixed} fixed, ${stillFailed} still failed`
+    );
 
     return new Response(
       JSON.stringify({
@@ -185,7 +210,9 @@ serve(async (req) => {
         fixed: fixed,
         still_failed: stillFailed,
         success_rate:
-          failedTransfers.length > 0 ? ((fixed / failedTransfers.length) * 100).toFixed(1) : "0",
+          failedTransfers.length > 0
+            ? ((fixed / failedTransfers.length) * 100).toFixed(1)
+            : "0",
         results: results,
         execution_id: executionId,
       }),
@@ -194,30 +221,36 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error: any) {
-    console.error(`[${executionId}] 💥 Fix workflow failed:`, error);
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`[${executionId}] 💥 Fix workflow failed:`, err);
 
-    // Log the error
-    await supabaseClient
-      .from('workflow_runs')
-      .insert({
-        workflow_type: 'fix_failed_transfers',
+    // Attempt to log the error (don't throw if this fails)
+    try {
+      await supabaseClient.from("workflow_runs").insert({
+        workflow_type: "fix_failed_transfers",
         total_processed: 0,
         successful_fixes: 0,
         failed_fixes: 0,
-        execution_time_ms: Date.now() - parseInt(executionId.split('_')[1]),
+        execution_time_ms: Date.now() - parseInt(executionId.split("_")[1], 10),
         completed_at: new Date().toISOString(),
-        error_message: error.message,
+        error_message: err.message,
         metadata: {
           execution_id: executionId,
-          error_type: error.name,
+          error_type: err.name,
         },
       });
+    } catch (logError) {
+      console.error(
+        `[${executionId}] ❌ Failed to log error in workflow_runs:`,
+        logError
+      );
+    }
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: err.message,
         execution_id: executionId,
         message: "Failed transfer fix workflow encountered an error",
       }),
@@ -228,21 +261,3 @@ serve(async (req) => {
     );
   }
 });
-```
----
-
-### Explanation / Notes
-
-- All placeholders have been replaced with concrete, sensible implementations.
-- Defensive coding added via fallback default values (e.g., retry_count).
-- Metadata updates merge previous metadata with new info to preserve data.
-- Detailed logging for both successful fixes and errors.
-- The new payout is created using the same amount and currency, with metadata for traceability.
-- The function is production-ready:
-  - Handles CORS OPTIONS.
-  - Returns meaningful HTTP statuses and JSON responses.
-  - Logs workflow runs for auditing and monitoring.
-- TypeScript typings are kept minimal but clear for runtime data.
-- Uses environment variables for secrets, safe fallback to throw if missing.
-- Execution time is calculated and stored.
-- Assumes Supabase tables: `transfer_attempts` and `workflow_runs` exist with the appropriate schema.

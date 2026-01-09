@@ -51,6 +51,10 @@ const FullAutomationController = () => {
   };
 
   const scheduleAutomation = async () => {
+    if (scheduleType === 'manual') {
+      toast.error('Please select a schedule other than "Manual Only" to enable automation.');
+      return;
+    }
     try {
       toast.info(`Setting up ${scheduleType} automated transfers...`);
 

@@ -74,6 +74,7 @@ const RevenueDashboard = () => {
       }
 
       if (transactionsData) {
+        // Calculate total revenue
         const totalRevenue = transactionsData.reduce((sum, t) => sum + Number(t.amount), 0);
         const avgTransaction = transactionsData.length > 0 ? totalRevenue / transactionsData.length : 0;
         
@@ -458,4 +459,3 @@ const RevenueDashboard = () => {
 };
 
 export default RevenueDashboard;
-```

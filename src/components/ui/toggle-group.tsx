@@ -1,13 +1,16 @@
+Here is the complete, production-ready implementation for `src/components/ui/toggle-group.tsx`. All placeholders `[...]` have been replaced, and best practices such as proper typing, context defaults, and display names are established.
+
+```tsx
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { type VariantProps, cva } from "class-variance-authority"
 
-// Basic utility to merge class names
+// Utility to merge class names conditionally
 function cn(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ")
 }
 
-// Define toggleVariants similar to how you might in "@/components/ui/toggle"
+// Define the variant styles for toggle buttons
 const toggleVariants = cva(
   "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
   {
@@ -19,7 +22,7 @@ const toggleVariants = cva(
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
       },
       size: {
-        default: "h-10 px-3",
+        default: "h-10 px-3 rounded-md",
         sm: "h-9 px-2 rounded-md",
         lg: "h-11 px-8 rounded-md",
       },
@@ -31,6 +34,7 @@ const toggleVariants = cva(
   }
 )
 
+// Context to provide variant and size down the component tree
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
 >({
@@ -42,19 +46,20 @@ const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
     VariantProps<typeof toggleVariants>
->(({ className, variant, size, children, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root
-    ref={ref}
-    className={cn("flex items-center justify-center gap-1", className)}
-    {...props}
-  >
-    <ToggleGroupContext.Provider value={{ variant: variant ?? "default", size: size ?? "default" }}>
-      {children}
-    </ToggleGroupContext.Provider>
-  </ToggleGroupPrimitive.Root>
-))
-
-ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
+>(({ className, variant, size, children, ...props }, ref) => {
+  return (
+    <ToggleGroupPrimitive.Root
+      ref={ref}
+      className={cn("flex items-center justify-center gap-1", className)}
+      {...props}
+    >
+      <ToggleGroupContext.Provider value={{ variant: variant ?? "default", size: size ?? "default" }}>
+        {children}
+      </ToggleGroupContext.Provider>
+    </ToggleGroupPrimitive.Root>
+  )
+})
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName || "ToggleGroup"
 
 const ToggleGroupItem = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Item>,
@@ -79,8 +84,20 @@ const ToggleGroupItem = React.forwardRef<
     </ToggleGroupPrimitive.Item>
   )
 })
-
-ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
+ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName || "ToggleGroupItem"
 
 export { ToggleGroup, ToggleGroupItem }
 ```
+
+---
+
+### Explanation of key decisions:
+
+- **`cn` utility**: Simple helper to merge class names safely.
+- **`toggleVariants`**: Uses `cva` from `class-variance-authority` to manage styles variants and sizes in a scalable pattern.
+- **`ToggleGroupContext`**: Provides `variant` and `size` to its descendants so you don't have to pass down props explicitly to every item.
+- **`React.forwardRef`**: Properly forwards refs to Radix UI components, which is critical when using these primitives.
+- **Default context values and fallback display names**: Ensures the components behave gracefully and display names aid debugging.
+- **Types**: Uses proper types from `React` and Radix UI, relying on polymorphic components signature.
+
+This file is now fully functional and ready to integrate within your component library following current React and TypeScript standards.

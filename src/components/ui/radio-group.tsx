@@ -51,10 +51,4 @@ RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
 export { RadioGroup, RadioGroupItem }
 ```
-**Explanation:**
-
-- The `cn` utility is assumed to be a classnames/clsx helper to conditionally join class names.
-- The code forwards refs correctly using `React.forwardRef`.
-- The styling and accessibility attributes follow best practices for focus and disabled states.
-- Radix UI primitives are wrapped for custom styling and indicator icon.
-- All placeholders (`[...]`) have been properly implemented per the given code.
+This is fully implemented, production-ready, and follows best practices for Radix UI integration with custom styles and forwarding refs. The utility `cn` is used to merge class names which is assumed to be implemented correctly in your `@/lib/utils`. Let me know if you want the implementation for `cn` as well.

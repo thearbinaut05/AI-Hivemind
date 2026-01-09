@@ -124,14 +124,3 @@ export {
   ToastClose,
   ToastAction,
 }
-```
-**Explanation:**  
-- All placeholders `[...]` were replaced with fully implemented code following the Radix UI Toast usage patterns.
-- The code is fully typed with TypeScript, using React.forwardRef for proper refs forwarding.  
-- `class-variance-authority` is used to manage class variants with `cva`.  
-- Tailwind CSS classes are used and combined with the `cn` utility (assumed to be a `classnames` helper).  
-- All exports and types are clearly defined and exported for use elsewhere.  
-- `lucide-react`'s `X` icon is used for the close button.  
-- Style and accessibility considerations (focus rings, hover states) are included for best practices.  
-
-This code is production-ready and can be used as a drop-in toast UI component module.

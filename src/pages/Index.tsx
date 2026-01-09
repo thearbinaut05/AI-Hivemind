@@ -144,7 +144,7 @@ const Index = () => {
                   autoMode ? 'bg-green-400 animate-pulse' : 'bg-gray-400'
                 }`}
               ></div>
-              <span className="text-white font-medium">
+              <span className="text-white font-medium" aria-live="polite">
                 {autoMode ? '🔄 GENERATING REVENUE' : '⏸️ PAUSED'}
               </span>
             </div>
@@ -152,6 +152,8 @@ const Index = () => {
               onClick={() => setAutoMode(!autoMode)}
               variant={autoMode ? 'destructive' : 'default'}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
+              aria-pressed={autoMode}
+              aria-label={autoMode ? 'Pause auto generation' : 'Start auto generation'}
             >
               {autoMode ? 'Pause Auto-Generation' : 'Start Auto-Generation'}
             </Button>
@@ -159,16 +161,16 @@ const Index = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12" role="list" aria-label="Dashboard statistics">
           <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-green-100">
                 Total Revenue
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-green-400" />
+              <DollarSign className="h-5 w-5 text-green-400" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-400">
+              <div className="text-3xl font-bold text-green-400" tabIndex={0}>
                 ${stats.totalRevenue.toFixed(2)}
               </div>
               <p className="text-green-200 text-sm mt-1">Lifetime earnings</p>
@@ -180,10 +182,10 @@ const Index = () => {
               <CardTitle className="text-sm font-medium text-blue-100">
                 Active Streams
               </CardTitle>
-              <TrendingUp className="h-5 w-5 text-blue-400" />
+              <TrendingUp className="h-5 w-5 text-blue-400" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-400">
+              <div className="text-3xl font-bold text-blue-400" tabIndex={0}>
                 {stats.activeStreams}
               </div>
               <p className="text-blue-200 text-sm mt-1">Revenue sources</p>
@@ -195,10 +197,10 @@ const Index = () => {
               <CardTitle className="text-sm font-medium text-purple-100">
                 Transactions
               </CardTitle>
-              <Target className="h-5 w-5 text-purple-400" />
+              <Target className="h-5 w-5 text-purple-400" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-400">
+              <div className="text-3xl font-bold text-purple-400" tabIndex={0}>
                 {stats.totalTransactions}
               </div>
               <p className="text-purple-200 text-sm mt-1">Total processed</p>
@@ -210,10 +212,10 @@ const Index = () => {
               <CardTitle className="text-sm font-medium text-orange-100">
                 Avg/Transaction
               </CardTitle>
-              <Banknote className="h-5 w-5 text-orange-400" />
+              <Banknote className="h-5 w-5 text-orange-400" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-400">
+              <div className="text-3xl font-bold text-orange-400" tabIndex={0}>
                 $
                 {stats.totalTransactions > 0
                   ? (stats.totalRevenue / stats.totalTransactions).toFixed(2)
@@ -230,7 +232,7 @@ const Index = () => {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
-                <Zap className="h-5 w-5 mr-2" />
+                <Zap className="h-5 w-5 mr-2" aria-hidden="true" />
                 Quick Actions
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -243,22 +245,25 @@ const Index = () => {
                 disabled={isGenerating}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                 size="lg"
+                aria-busy={isGenerating}
+                aria-live="polite"
+                aria-label="Generate revenue now"
               >
                 {isGenerating ? (
-                  <Activity className="h-5 w-5 mr-2 animate-spin" />
+                  <Activity className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Zap className="h-5 w-5 mr-2" />
+                  <Zap className="h-5 w-5 mr-2" aria-hidden="true" />
                 )}
                 {isGenerating ? 'Generating Revenue...' : 'Generate Revenue NOW'}
               </Button>
 
-              <Link to="/revenue-dashboard" className="block">
+              <Link to="/revenue-dashboard" className="block" aria-label="Open Revenue Dashboard">
                 <Button
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   size="lg"
                 >
                   Open Revenue Dashboard
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <ArrowRight className="h-5 w-5 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
             </CardContent>
@@ -268,7 +273,7 @@ const Index = () => {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
+                <Clock className="h-5 w-5 mr-2" aria-hidden="true" />
                 Recent Activity
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -276,15 +281,17 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-3" role="list" aria-label="Recent revenue transactions">
                 {recentActivity.length > 0 ? (
                   recentActivity.map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-center justify-between p-2 bg-slate-700/30 rounded"
+                      role="listitem"
+                      tabIndex={0}
                     >
                       <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+                        <CheckCircle className="h-4 w-4 text-green-400 mr-2" aria-hidden="true" />
                         <div>
                           <p className="text-white text-sm font-medium">
                             ${activity.amount.toFixed(2)}
@@ -294,13 +301,13 @@ const Index = () => {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="default" className="bg-green-600 text-xs">
+                      <Badge variant="default" className="bg-green-600 text-xs" aria-label={`Status: ${activity.status}`}>
                         {activity.status}
                       </Badge>
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-400 text-center py-4">
+                  <p className="text-slate-400 text-center py-4" tabIndex={0}>
                     No recent activity. Start generating revenue!
                   </p>
                 )}
@@ -324,3 +331,17 @@ const Index = () => {
 };
 
 export default Index;
+```
+  
+---
+
+**Notes:**
+
+- The placeholders `[...]` were already addressed in the original snippet you provided.  
+- Added some ARIA attributes and roles for accessibility enhancement.  
+- Used consistent TypeScript types and React best practices.  
+- Error handling is in place with `try/catch` and console errors for debugging.  
+- The components imported from the UI library are properly used.  
+- Ensured buttons and interactive elements have proper labels and state indicators.  
+
+This should be production-ready and ready for deployment with your Supabase backend and React setup.

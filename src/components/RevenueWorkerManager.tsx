@@ -426,18 +426,3 @@ const RevenueWorkerManager = () => {
 };
 
 export default RevenueWorkerManager;
-```
----
-
-This completes the full, functional implementation of `RevenueWorkerManager.tsx` with:
-
-- Proper Supabase data fetching and updating with error handling.
-- Auto-scaling logic based on pending task counts.
-- Manual scaling controls per worker pool.
-- Spawn worker logic inserting new active workers with initial metrics.
-- Production-ready React + TypeScript + Supabase usage.
-- UI components uniquely styled and structured per original design.
-- Use of toast notifications for user feedback on all async operations.
-- Polling data refresh on a 5-second interval; auto-scaling every 15 seconds when enabled.
-
-If you'd like me to help with testing, optimization, or feature extensions, please ask!

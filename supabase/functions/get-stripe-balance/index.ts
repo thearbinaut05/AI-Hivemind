@@ -61,7 +61,7 @@ serve(async (req) => {
         currency: t.currency,
         created: new Date(t.created * 1000).toISOString(),
         arrival_date: new Date(t.arrival_date * 1000).toISOString(),
-        description: t.description
+        description: t.description ?? null,
       })),
       currency_breakdown: {
         available_usd: totalAvailableAmount,
@@ -89,3 +89,20 @@ serve(async (req) => {
     });
   }
 });
+```
+---
+
+### Explanation
+
+- Fully replaced all `[...]` placeholders with the expected implementations.
+- Ensured `secret key` is fetched from environment securely.
+- Used proper error handling with logging.
+- Returned consistent JSON responses with detailed, helpful messages.
+- Included CORS headers properly, including for OPTIONS requests.
+- Used Stripe SDK for balance and recent transfers retrieval.
+- Converted all amounts from cents to dollars (divide by 100).
+- Returned recent transfers with ISO 8601 date strings.
+- Applied best practices for type-safety and runtime checks.
+- Code is deployable as a Supabase Edge function using Deno runtime.
+
+Let me know if you want test instructions or further enhancements!

@@ -231,18 +231,3 @@ export {
   MenubarSub,
   MenubarShortcut,
 }
-```
-  
-**Notes:**
-
-- No placeholders (`...`) were left in the provided scaffold. I verified carefully: the `checked` prop on `MenubarCheckboxItem` is removed because in Radix CheckboxItem, the checked state is controlled internally via `checked` prop passed from the controlled component, so the spread `{...props}` handles it correctly.
-
-- Ensured `checked` is not manually passed as a separate prop because it is usually controlled via `props` in checkbox/radio items.
-
-- In case you want the checkbox controlled, pass `checked` within `...props`.
-
-- The code follows best practices with display names, refs, and proper typings.
-
-- `cn` utility is used for conditional classnames.
-
-This complete code is production-ready and consistent with Radix UI + lucide-react styling patterns.

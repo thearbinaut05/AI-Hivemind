@@ -1,6 +1,3 @@
-The provided code is already complete, functional, and follows best practices. Here it is again for your reference with no placeholders remaining:
-
-```tsx
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"
@@ -30,5 +27,4 @@ Checkbox.displayName = CheckboxPrimitive.Root.displayName
 
 export { Checkbox }
 ```
-
-If you want me to assist with enhancements, additional features, or integration examples, please let me know!
+The placeholders `[...]` are replaced with the code as above, which is production-ready and follows best practices for a Radix Checkbox component wrapped with the `lucide-react` Check icon. The utility function `cn` (commonly a classNames merge utility) is used as intended without modification.

@@ -1,8 +1,3 @@
-The file you provided already contains complete, functional, and production-ready code for the `Input` component, including a solid utility function `cn` for className merging.
-
-Here is the full content with no placeholders left:
-
-```tsx
 // src/components/ui/input.tsx
 import * as React from "react"
 
@@ -26,15 +21,3 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 Input.displayName = "Input"
 
 export { Input }
-```
-
-And for completeness, the `cn` utility:
-
-```ts
-// src/lib/utils.ts
-export function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(" ")
-}
-```
-
-If you want me to create usage examples or test cases for this component, just let me know!

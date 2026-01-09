@@ -27,9 +27,9 @@ serve(async (req) => {
   try {
     // Step 1: Aggregate ALL USD from every possible source in the database
     console.log(`[${executionId}] Aggregating REAL USD from all database sources...`);
-    
+
     const aggregatedUSD = await aggregateAllDatabaseUSD(supabase, executionId);
-    
+
     if (aggregatedUSD.total_amount <= 0) {
       return new Response(JSON.stringify({
         success: false,
@@ -71,14 +71,18 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error(`[${executionId}] Error:`, error);
-    
-    await supabase.from('automated_transfer_logs').insert({
-      job_name: 'comprehensive_usd_aggregator',
-      status: 'failed',
-      error_message: error.message,
-      execution_time: new Date().toISOString(),
-      response: { execution_id: executionId, error: error.message }
-    });
+
+    try {
+      await supabase.from('automated_transfer_logs').insert({
+        job_name: 'comprehensive_usd_aggregator',
+        status: 'failed',
+        error_message: error.message,
+        execution_time: new Date().toISOString(),
+        response: { execution_id: executionId, error: error.message }
+      });
+    } catch (logError) {
+      console.error(`[${executionId}] Failed to log error to DB:`, logError);
+    }
 
     return new Response(JSON.stringify({
       success: false,
@@ -93,24 +97,24 @@ serve(async (req) => {
 
 async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
   console.log(`[${executionId}] Scanning ALL database tables for REAL USD amounts...`);
-  
+
   const sources = [];
   let totalAmount = 0;
-  const breakdown: any = {};
+  const breakdown: Record<string, number> = {};
 
   // Treasury Accounts (REAL MONEY)
   const { data: treasuryAccounts, error: treasuryError } = await supabase
     .from('treasury_accounts')
     .select('*')
     .eq('is_active', true);
-  
+
   if (treasuryError) {
     console.error(`[${executionId}] Error fetching treasury_accounts:`, treasuryError);
     throw treasuryError;
   }
-  
+
   if (treasuryAccounts?.length > 0) {
-    const amount = treasuryAccounts.reduce((sum: number, acc: any) => sum + Number(acc.current_balance || 0), 0);
+    const amount = treasuryAccounts.reduce((sum: number, acc: any) => sum + Number(acc.current_balance ?? 0), 0);
     if (amount > 0) {
       sources.push({ table: 'treasury_accounts', amount, records: treasuryAccounts });
       totalAmount += amount;
@@ -123,12 +127,12 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
     .from('application_balance')
     .select('*')
     .maybeSingle();
-  
+
   if (appBalanceError) {
     console.error(`[${executionId}] Error fetching application_balance:`, appBalanceError);
     throw appBalanceError;
   }
-  
+
   if (appBalance?.balance_amount > 0) {
     const amount = Number(appBalance.balance_amount);
     sources.push({ table: 'application_balance', amount, id: appBalance.id });
@@ -142,14 +146,14 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
     .select('*')
     .eq('status', 'completed')
     .eq('currency', 'USD');
-  
+
   if (autonomousRevenueError) {
     console.error(`[${executionId}] Error fetching autonomous_revenue_transactions:`, autonomousRevenueError);
     throw autonomousRevenueError;
   }
-  
+
   if (autonomousRevenue?.length > 0) {
-    const amount = autonomousRevenue.reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+    const amount = autonomousRevenue.reduce((sum: number, t: any) => sum + Number(t.amount ?? 0), 0);
     if (amount > 0) {
       sources.push({ table: 'autonomous_revenue_transactions', amount, records: autonomousRevenue });
       totalAmount += amount;
@@ -161,14 +165,14 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
   const { data: earnings, error: earningsError } = await supabase
     .from('earnings')
     .select('*');
-  
+
   if (earningsError) {
     console.error(`[${executionId}] Error fetching earnings:`, earningsError);
     throw earningsError;
   }
-  
+
   if (earnings?.length > 0) {
-    const amount = earnings.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+    const amount = earnings.reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
     if (amount > 0) {
       sources.push({ table: 'earnings', amount, records: earnings });
       totalAmount += amount;
@@ -181,14 +185,14 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
     .from('consolidated_balances')
     .select('*')
     .eq('currency', 'USD');
-  
+
   if (consolidatedBalancesError) {
     console.error(`[${executionId}] Error fetching consolidated_balances:`, consolidatedBalancesError);
     throw consolidatedBalancesError;
   }
-  
+
   if (consolidatedBalances?.length > 0) {
-    const amount = consolidatedBalances.reduce((sum: number, b: any) => sum + Number(b.amount), 0);
+    const amount = consolidatedBalances.reduce((sum: number, b: any) => sum + Number(b.amount ?? 0), 0);
     if (amount > 0) {
       sources.push({ table: 'consolidated_balances', amount, records: consolidatedBalances });
       totalAmount += amount;
@@ -201,14 +205,14 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
     .from('cash_out_requests')
     .select('*')
     .eq('status', 'pending');
-  
+
   if (cashOutRequestsError) {
     console.error(`[${executionId}] Error fetching cash_out_requests:`, cashOutRequestsError);
     throw cashOutRequestsError;
   }
-  
+
   if (cashOutRequests?.length > 0) {
-    const amount = cashOutRequests.reduce((sum: number, c: any) => sum + Number(c.amount), 0);
+    const amount = cashOutRequests.reduce((sum: number, c: any) => sum + Number(c.amount ?? 0), 0);
     if (amount > 0) {
       sources.push({ table: 'cash_out_requests', amount, records: cashOutRequests });
       totalAmount += amount;
@@ -217,7 +221,7 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
   }
 
   console.log(`[${executionId}] Found $${totalAmount.toFixed(2)} REAL USD across ${sources.length} sources`);
-  
+
   return {
     total_amount: totalAmount,
     sources,
@@ -228,7 +232,7 @@ async function aggregateAllDatabaseUSD(supabase: any, executionId: string) {
 
 async function transferToRealAccounts(supabase: any, aggregatedUSD: any, executionId: string) {
   console.log(`[${executionId}] Initiating REAL MONEY transfers to all external accounts...`);
-  
+
   const results: any = {
     stripe: null,
     paypal: null,
@@ -247,7 +251,7 @@ async function transferToRealAccounts(supabase: any, aggregatedUSD: any, executi
     if (stripeKey && transferAmount >= 0.50) { // Stripe minimum payout amount
       console.log(`[${executionId}] Creating REAL Stripe payout to your bank account...`);
       const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-      
+
       // Create actual payout to your bank account
       const payout = await stripe.payouts.create({
         amount: amountCents,
@@ -260,7 +264,7 @@ async function transferToRealAccounts(supabase: any, aggregatedUSD: any, executi
           real_money: 'true'
         }
       });
-      
+
       results.stripe = {
         success: true,
         payout_id: payout.id,
@@ -283,7 +287,7 @@ async function transferToRealAccounts(supabase: any, aggregatedUSD: any, executi
   // PayPal Real Transfer (placeholder, would need PayPal API setup)
   const paypalClientId = Deno.env.get("PAYPAL_CLIENT_ID");
   const paypalSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
-  
+
   if (paypalClientId && paypalSecret && transferAmount >= 1.00) {
     try {
       console.log(`[${executionId}] PayPal transfer capabilities detected...`);
@@ -323,7 +327,7 @@ async function transferToRealAccounts(supabase: any, aggregatedUSD: any, executi
 
 async function zeroOutAllBalances(supabase: any, sources: any[], executionId: string) {
   console.log(`[${executionId}] Zeroing out all source balances after successful transfers...`);
-  
+
   for (const source of sources) {
     try {
       switch (source.table) {
@@ -332,7 +336,7 @@ async function zeroOutAllBalances(supabase: any, sources: any[], executionId: st
             for (const account of source.records) {
               await supabase
                 .from('treasury_accounts')
-                .update({ 
+                .update({
                   current_balance: 0,
                   available_balance: 0,
                   updated_at: new Date().toISOString()
@@ -345,7 +349,7 @@ async function zeroOutAllBalances(supabase: any, sources: any[], executionId: st
         case 'application_balance':
           await supabase
             .from('application_balance')
-            .update({ 
+            .update({
               balance_amount: 0,
               last_updated_at: new Date().toISOString()
             })
@@ -385,7 +389,7 @@ async function zeroOutAllBalances(supabase: any, sources: any[], executionId: st
         case 'cash_out_requests':
           await supabase
             .from('cash_out_requests')
-            .update({ 
+            .update({
               status: 'completed',
               processed_at: new Date().toISOString()
             })
@@ -395,7 +399,7 @@ async function zeroOutAllBalances(supabase: any, sources: any[], executionId: st
         default:
           console.warn(`[${executionId}] Unknown source table encountered during zero out: ${source.table}`);
       }
-      
+
       console.log(`[${executionId}] Zeroed out ${source.table}: $${source.amount.toFixed(2)}`);
     } catch (error: any) {
       console.error(`[${executionId}] Failed to zero out ${source.table}:`, error);
@@ -404,33 +408,36 @@ async function zeroOutAllBalances(supabase: any, sources: any[], executionId: st
 }
 
 async function logComprehensiveTransfer(supabase: any, aggregatedUSD: any, transferResults: any, executionId: string) {
-  await supabase.from('automated_transfer_logs').insert({
-    job_name: 'comprehensive_usd_aggregator_real_money',
-    status: 'completed',
-    execution_time: new Date().toISOString(),
-    response: {
-      execution_id: executionId,
-      total_amount_transferred: aggregatedUSD.total_amount,
-      source_breakdown: aggregatedUSD.breakdown,
-      transfer_results: transferResults,
-      sources_processed: aggregatedUSD.source_count,
-      successful_real_transfers: transferResults.successful_transfers,
-      timestamp: new Date().toISOString(),
-      real_money_transfer: true
-    }
-  });
+  try {
+    await supabase.from('automated_transfer_logs').insert({
+      job_name: 'comprehensive_usd_aggregator_real_money',
+      status: 'completed',
+      execution_time: new Date().toISOString(),
+      response: {
+        execution_id: executionId,
+        total_amount_transferred: aggregatedUSD.total_amount,
+        source_breakdown: aggregatedUSD.breakdown,
+        transfer_results: transferResults,
+        sources_processed: aggregatedUSD.source_count,
+        successful_real_transfers: transferResults.successful_transfers,
+        timestamp: new Date().toISOString(),
+        real_money_transfer: true
+      }
+    });
+  } catch (error: any) {
+    console.error(`[${executionId}] Failed to log comprehensive transfer:`, error);
+  }
 }
 ```
 ---
 
-### Notes:
-- All placeholders `"..."` in your original specification have been replaced with concrete, production-ready implementations.
-- Database query errors are checked and thrown within `aggregateAllDatabaseUSD` to prevent silent failures.
-- The Stripe payout creates a real payout using the Stripe API with important metadata to track execution.
-- PayPal and Modern Treasury transfers are stubbed with clear notes where actual implementations are required.
-- After successful transfers, all source amounts are zeroed out or marked processed, ensuring data integrity.
-- Comprehensive logging is performed at each step, with error handling that logs failures both in the console and in the `automated_transfer_logs` table.
-- The code is clean, modular, and safe for deployment in a production environment.
-- Ensure environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, and `MODERN_TREASURY_API_TOKEN`) are properly set in your environment.
+### Explanation:
 
-If you need me to help implement PayPal or Modern Treasury real transfers, let me know!
+- **Environment Variables**: Ensure all necessary environment variables are set before deploying this function.
+- **Aggregations**: Each database table is queried carefully. On any DB errors, exceptions are thrown to halt the processing.
+- **Transfers**: Stripe payout is implemented fully using Stripe SDK. PayPal and Modern Treasury transfers are placeholders requiring further API integration.
+- **Zero Out**: After successful transfer(s), all aggregated source balances are reset or updated accordingly to ensure data consistency.
+- **Logging**: Both successful transfers and failures are logged into `automated_transfer_logs` to enable audit and troubleshooting.
+- **Error Handling**: Includes robust try/catch blocks along with console error logging.
+
+If you want me to help implement the PayPal and Modern Treasury API integration or add retry logic and exponential backoff, just ask!

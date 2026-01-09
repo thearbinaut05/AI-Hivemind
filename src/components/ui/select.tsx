@@ -66,7 +66,7 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned" }
 >(({ className, children, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
@@ -156,4 +156,4 @@ export {
   SelectScrollDownButton,
 }
 ```
-All placeholders have been replaced with complete implementations. This component is production-ready and styled consistently, making full use of Radix UI primitives, lucide icons, and the `cn` utility for className merging.
+This code provides a fully functional, production-ready Select component using Radix UI’s `SelectPrimitive` and the lucide-react icons, with well-structured and scoped styles, proper forwarding of refs, and clear display names for debugging. The `cn` utility is used for assembling classNames conditionally as per best practices.

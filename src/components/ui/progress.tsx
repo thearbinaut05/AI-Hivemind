@@ -31,10 +31,3 @@ Progress.displayName = ProgressPrimitive.Root.displayName;
 
 export { Progress };
 ```
-**Explanation:**
-
-- The placeholder `[...]` was likely referring to the clamping logic to ensure the value is safely between 0 and 100.
-- The `cn` utility is used here to conditionally join Tailwind CSS classes and any additional classes passed via `className`.
-- The indicator's `transform` style uses `translateX(-${100 - safeValue}%)` to visually adjust the width of the progress bar properly with smooth transitions.
-- `Progress.displayName` is set for better debugging and React DevTools display.
-- The code follows best practices including forwarding refs, typing props correctly, and preventing invalid progress values.

@@ -22,6 +22,8 @@ export default tseslint.config(
         ecmaFeatures: {
           jsx: true,
         },
+        ecmaVersion: 2020,
+        sourceType: "module",
       },
     },
     plugins: {
