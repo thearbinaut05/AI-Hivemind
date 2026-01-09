@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,13 +72,21 @@ const RevenueOptimizer = () => {
 
         // Calculate stats
         const totalImprovements = transformedData.filter(o => o.status === 'applied').length;
-        const avgImpact = transformedData.reduce((sum, o) => sum + (o.impact || 0), 0) / transformedData.length;
-        const successRate = (totalImprovements / transformedData.length) * 100;
+        const avgImpact = transformedData.length === 0 ? 0 : transformedData.reduce((sum, o) => sum + (o.impact || 0), 0) / transformedData.length;
+        const successRate = transformedData.length === 0 ? 0 : (totalImprovements / transformedData.length) * 100;
 
         setOptimizationStats({
           total_improvements: totalImprovements,
           avg_impact: avgImpact || 0,
           success_rate: successRate || 0
+        });
+      } else {
+        // no data, clear state
+        setOptimizations([]);
+        setOptimizationStats({
+          total_improvements: 0,
+          avg_impact: 0,
+          success_rate: 0
         });
       }
     } catch (error) {
@@ -215,10 +222,10 @@ const RevenueOptimizer = () => {
                     }`}></div>
                     <div>
                       <p className="text-white font-medium capitalize">
-                        {optimization.type.replace('_', ' ')}
+                        {optimization.type.replace(/_/g, ' ')}
                       </p>
                       <p className="text-slate-400 text-sm">
-                        {optimization.metadata?.description || 'Performance optimization'} • 
+                        {optimization.metadata?.description || 'Performance optimization'} •{' '}
                         {new Date(optimization.created_at).toLocaleTimeString()}
                       </p>
                     </div>

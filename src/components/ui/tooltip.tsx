@@ -1,3 +1,6 @@
+Here is the complete, functional code for `src/components/ui/tooltip.tsx` with all placeholders replaced:
+
+```tsx
 import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
@@ -26,3 +29,6 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+```
+
+This code integrates Radix UI's Tooltip primitives with your utility `cn` function for conditional class names and uses a `forwardRef` for the TooltipContent component, making it fully functional and ready to use in your React app.

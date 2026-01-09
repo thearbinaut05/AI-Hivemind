@@ -1,3 +1,8 @@
+The code you provided for `src/components/ui/radio-group.tsx` is already complete and functional. It properly wraps Radix UI's RadioGroup primitives with styling and ref forwarding, includes an accessible indicator icon using `lucide-react`, and preserves display names for easier debugging.
+
+For your convenience, here is the full, correct file again:
+
+```tsx
 import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { Circle } from "lucide-react"
@@ -40,3 +45,6 @@ const RadioGroupItem = React.forwardRef<
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
 export { RadioGroup, RadioGroupItem }
+```
+
+If you want me to add or modify anything else, please let me know!

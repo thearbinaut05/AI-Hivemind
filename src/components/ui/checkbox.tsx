@@ -1,3 +1,6 @@
+The file you provided is already complete and functional, with no placeholders ('...') left to replace. For clarity, here is the full, fully implemented code again:
+
+```tsx
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"
@@ -26,3 +29,6 @@ const Checkbox = React.forwardRef<
 Checkbox.displayName = CheckboxPrimitive.Root.displayName
 
 export { Checkbox }
+```
+
+If you want me to enhance, refactor, or add anything else, just ask!

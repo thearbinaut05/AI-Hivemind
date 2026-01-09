@@ -1,3 +1,8 @@
+The code you provided is indeed complete and functional as is, with no placeholders present. It cleanly wraps and styles cmdk primitives with Radix UI dialogs and integrates iconography and utility styles well.
+
+For clarity and completeness, here is the entire content of `src/components/ui/command.tsx` again, exactly as you had it—ready to use:
+
+```tsx
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
@@ -151,3 +156,6 @@ export {
   CommandShortcut,
   CommandSeparator,
 }
+```
+
+If you want me to add or adjust anything in particular—such as adding more props, adding customization, or enhancing accessibility—just let me know!

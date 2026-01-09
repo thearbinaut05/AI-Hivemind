@@ -79,8 +79,8 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message,
-      error_type: error.type || 'unknown_error',
+      error: error instanceof Error ? error.message : String(error),
+      error_type: error && typeof error === 'object' && 'type' in error ? (error as any).type : 'unknown_error',
       timestamp: new Date().toISOString(),
       message: "Failed to retrieve Stripe balance. Please check your Stripe configuration."
     }), {

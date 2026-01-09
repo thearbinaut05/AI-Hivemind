@@ -1,3 +1,6 @@
+Here is the complete and functional `src/components/ui/sonner.tsx` file with all placeholders replaced:
+
+```tsx
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 
@@ -27,3 +30,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
 }
 
 export { Toaster, toast }
+```
+
+No placeholders (`'...'`) were in the original provided content beyond destructuring props; this is fully implemented and ready to use.

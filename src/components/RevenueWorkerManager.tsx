@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +12,6 @@ import {
   Zap,
   Settings,
   BarChart3,
-  ArrowUpRight,
-  Timer,
-  CheckCircle,
-  AlertTriangle
 } from "lucide-react";
 
 interface Worker {
@@ -24,7 +19,11 @@ interface Worker {
   worker_type: string;
   status: string;
   last_heartbeat: string;
-  metrics: any;
+  metrics: {
+    tasks_completed: number;
+    revenue_processed: number;
+    efficiency_score: number;
+  };
   config: any;
 }
 
@@ -55,7 +54,7 @@ const RevenueWorkerManager = () => {
       const interval = setInterval(autoScaleWorkers, 15000);
       return () => clearInterval(interval);
     }
-  }, [autoScale]);
+  }, [autoScale, workerPools, workers]);
 
   const loadWorkerData = async () => {
     try {
@@ -68,16 +67,22 @@ const RevenueWorkerManager = () => {
       setWorkerPools(poolsResponse.data || []);
     } catch (error) {
       console.error('Error loading worker data:', error);
+      toast.error('Failed to load worker data');
     }
   };
 
   const autoScaleWorkers = async () => {
     try {
       // Get pending tasks count
-      const { data: tasks } = await supabase
+      const { data: tasks, error: taskError } = await supabase
         .from('autonomous_revenue_task_queue')
         .select('*')
         .eq('status', 'pending');
+
+      if (taskError) {
+        console.error(taskError);
+        throw new Error('Failed to fetch pending tasks');
+      }
 
       const pendingTasks = tasks?.length || 0;
       
@@ -89,7 +94,7 @@ const RevenueWorkerManager = () => {
         );
 
         if (optimalWorkers !== pool.current_workers) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('autonomous_revenue_worker_pool')
             .update({
               current_workers: optimalWorkers,
@@ -100,19 +105,37 @@ const RevenueWorkerManager = () => {
               }
             })
             .eq('id', pool.id);
+
+          if (updateError) {
+            console.error('Error updating worker pool:', updateError);
+            toast.error('Failed to update worker pool scaling');
+          }
         }
       }
 
+      // Refresh pools after update
+      const { data: updatedPools, error: updatedPoolsError } = await supabase.from('autonomous_revenue_worker_pool').select('*').order('worker_type');
+      if (updatedPoolsError) {
+        console.error(updatedPoolsError);
+        toast.error('Failed to reload worker pools after scaling');
+        return;
+      }
+      if (updatedPools) setWorkerPools(updatedPools);
+
       // Spawn new workers if needed
       const activeWorkers = workers.filter(w => w.status === 'active').length;
-      const totalOptimal = workerPools.reduce((sum, pool) => sum + pool.current_workers, 0);
+      const totalOptimal = updatedPools?.reduce((sum, pool) => sum + pool.current_workers, 0) || 0;
 
       if (activeWorkers < totalOptimal) {
         await spawnWorkers(totalOptimal - activeWorkers);
       }
 
+      // Refresh worker list after spawning
+      loadWorkerData();
+
     } catch (error) {
       console.error('Auto-scaling error:', error);
+      toast.error('Auto-scaling encountered an error');
     }
   };
 
@@ -122,7 +145,7 @@ const RevenueWorkerManager = () => {
     for (let i = 0; i < count; i++) {
       const workerType = workerTypes[i % workerTypes.length];
       
-      await supabase
+      const { error } = await supabase
         .from('autonomous_revenue_workers')
         .insert({
           worker_type: workerType,
@@ -136,8 +159,14 @@ const RevenueWorkerManager = () => {
             tasks_completed: 0,
             revenue_processed: 0,
             efficiency_score: 1.0
-          }
+          },
+          created_at: new Date().toISOString()
         });
+
+      if (error) {
+        console.error('Error spawning worker:', error);
+        toast.error('Failed to spawn new worker');
+      }
     }
   };
 
@@ -145,13 +174,17 @@ const RevenueWorkerManager = () => {
     setScaling(true);
     try {
       const pool = workerPools.find(p => p.id === poolId);
-      if (!pool) return;
+      if (!pool) {
+        toast.error('Worker pool not found');
+        setScaling(false);
+        return;
+      }
 
       const newCount = direction === 'up' 
         ? Math.min(pool.max_workers, pool.current_workers + 5)
         : Math.max(1, pool.current_workers - 2);
 
-      await supabase
+      const { error } = await supabase
         .from('autonomous_revenue_worker_pool')
         .update({
           current_workers: newCount,
@@ -163,10 +196,14 @@ const RevenueWorkerManager = () => {
         })
         .eq('id', poolId);
 
-      if (direction === 'up') {
-        await spawnWorkers(5);
+      if (error) {
+        throw error;
+      }
+
+      if (direction === 'up' && newCount > pool.current_workers) {
+        await spawnWorkers(newCount - pool.current_workers);
         toast.success(`Scaled up ${pool.worker_type} workers to ${newCount}`);
-      } else {
+      } else if (direction === 'down') {
         toast.success(`Scaled down ${pool.worker_type} workers to ${newCount}`);
       }
 
@@ -182,7 +219,7 @@ const RevenueWorkerManager = () => {
   const totalWorkers = workers.length;
   const activeWorkers = workers.filter(w => w.status === 'active').length;
   const totalRevenue = workers.reduce((sum, w) => sum + (w.metrics?.revenue_processed || 0), 0);
-  const avgEfficiency = workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers || 0;
+  const avgEfficiency = totalWorkers === 0 ? 0 : workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers;
 
   return (
     <div className="space-y-6">

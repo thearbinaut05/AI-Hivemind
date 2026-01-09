@@ -9,7 +9,25 @@ const Breadcrumb = React.forwardRef<
   React.ComponentPropsWithoutRef<"nav"> & {
     separator?: React.ReactNode
   }
->(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />)
+>(({ separator = <ChevronRight />, children, ...props }, ref) => (
+  <nav ref={ref} aria-label="breadcrumb" {...props}>
+    {/* Render the list containing the breadcrumb items */}
+    <BreadcrumbList>
+      {React.Children.toArray(children).map((child, i) => {
+        // Insert separator between all items except the last
+        if (!React.isValidElement(child)) return child
+        return (
+          <React.Fragment key={i}>
+            {child}
+            {i < React.Children.count(children) - 1 ? (
+              <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>
+            ) : null}
+          </React.Fragment>
+        )
+      })}
+    </BreadcrumbList>
+  </nav>
+))
 Breadcrumb.displayName = "Breadcrumb"
 
 const BreadcrumbList = React.forwardRef<
@@ -102,7 +120,7 @@ const BreadcrumbEllipsis = ({
     <span className="sr-only">More</span>
   </span>
 )
-BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"
+BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
 
 export {
   Breadcrumb,

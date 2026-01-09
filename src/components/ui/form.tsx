@@ -1,3 +1,6 @@
+Here is the complete, functional code for `src/components/ui/form.tsx` with all placeholders (`[...]`) replaced appropriately:
+
+```tsx
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -44,12 +47,14 @@ const useFormField = () => {
   const itemContext = React.useContext(FormItemContext)
   const { getFieldState, formState } = useFormContext()
 
-  const fieldState = getFieldState(fieldContext.name, formState)
-
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>")
   }
+  if (!itemContext) {
+    throw new Error("useFormField should be used within <FormItem>")
+  }
 
+  const fieldState = getFieldState(fieldContext.name, formState)
   const { id } = itemContext
 
   return {
@@ -174,3 +179,6 @@ export {
   FormMessage,
   FormField,
 }
+```
+
+If you would like me to add comments or further explain any part, please let me know!

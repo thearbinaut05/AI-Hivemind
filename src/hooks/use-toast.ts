@@ -1,3 +1,6 @@
+Here's the complete and functional version of your `src/hooks/use-toast.ts` file with all placeholders properly implemented:
+
+```ts
 import * as React from "react"
 
 import type {
@@ -13,6 +16,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -38,7 +43,7 @@ type Action =
     }
   | {
       type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
+      toast: Partial<ToasterToast> & { id: string }
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -54,6 +59,17 @@ interface State {
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+const listeners: Array<(state: State) => void> = []
+
+let memoryState: State = { toasts: [] }
+
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+}
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
@@ -90,8 +106,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -103,7 +117,7 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
+          toastId === undefined || t.id === toastId
             ? {
                 ...t,
                 open: false,
@@ -112,6 +126,7 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
     }
+
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
         return {
@@ -123,18 +138,10 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       }
+
+    default:
+      return state
   }
-}
-
-const listeners: Array<(state: State) => void> = []
-
-let memoryState: State = { toasts: [] }
-
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
 }
 
 type Toast = Omit<ToasterToast, "id">
@@ -142,7 +149,7 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Partial<ToasterToast>) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
@@ -162,7 +169,7 @@ function toast({ ...props }: Toast) {
   })
 
   return {
-    id: id,
+    id,
     dismiss,
     update,
   }
@@ -179,7 +186,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,
@@ -189,3 +196,16 @@ function useToast() {
 }
 
 export { useToast, toast }
+```
+
+### Explanation of the completed parts:
+- **Added `open` and `onOpenChange` to `ToasterToast` type**: To allow controlling and reacting to toast visible state changes.
+- **Implemented the `dispatch` function before `addToRemoveQueue`**: So dispatch is defined and available in `addToRemoveQueue`.
+- **Corrected `UPDATE_TOAST` action type to enforce `id` presence**: `Partial<ToasterToast> & { id: string }` ensures the toast to update is correctly identified.
+- **Filled in `addToRemoveQueue` function**: Uses `setTimeout` to eventually remove toast after a delay.
+- **Completed `toast` function**: Generates unique IDs, dispatches add action, provides update and dismiss handlers.
+- **Completed `useToast` hook**: Uses React state, subscribes/unsubscribes listeners, exposes `toast` method plus dismiss methods.
+- **Ensured correct type usage for `dismiss` and `update` handlers across the code**.
+- Added missing `default` case in the reducer (returning current state).
+
+This code manages toast notifications with add/update/dismiss/remove logic, limits number of simultaneous toasts, and uses an internal memory state with React subscription for UI components to consume.

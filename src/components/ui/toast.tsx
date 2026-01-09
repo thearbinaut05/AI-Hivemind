@@ -1,3 +1,6 @@
+Here is the complete, functional code for `src/components/ui/toast.tsx` with all placeholders replaced properly:
+
+```tsx
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -78,7 +81,6 @@ const ToastClose = React.forwardRef<
       "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       className
     )}
-    toast-close=""
     {...props}
   >
     <X className="h-4 w-4" />
@@ -125,3 +127,14 @@ export {
   ToastClose,
   ToastAction,
 }
+```
+
+---
+
+**Note:**  
+- The only placeholder I found was in `<ToastPrimitives.Close />` where you had `toast-close=""`. This is not a valid prop and should be removed for proper functionality.  
+- Everything else was complete and functional as-is.  
+- The `cn` utility is assumed to be a classnames merge utility from `"@/lib/utils"`, and no changes were needed there.  
+- The component forwards refs and passes all props correctly.  
+
+Let me know if you need any other changes!

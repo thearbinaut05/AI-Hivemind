@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +12,7 @@ import {
   BarChart3,
   PieChart
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPie, Pie, Cell } from 'recharts';
 
 interface RevenueData {
   total_revenue: number;
@@ -43,46 +42,55 @@ const ComprehensiveRevenueAnalytics = () => {
   const loadAnalytics = async () => {
     try {
       // Get revenue streams
-      const { data: streamsData } = await supabase
+      const { data: streamsData, error: streamsError } = await supabase
         .from('autonomous_revenue_streams')
         .select('*')
         .eq('status', 'active');
 
+      if (streamsError) {
+        console.error('Error fetching streams:', streamsError);
+      }
+
       if (streamsData) {
-        const processedStreams = streamsData.map(stream => ({
+        const processedStreams = streamsData.map((stream: any) => ({
           id: stream.id,
           name: stream.name,
           strategy: typeof stream.strategy === 'string' ? stream.strategy : 'unknown',
           status: stream.status,
-          metrics: stream.metrics as any || {}
+          metrics: (stream.metrics as any) || {}
         }));
         setStreams(processedStreams);
       }
 
-      // Get revenue data
-      const { data: transactions } = await supabase
+      // Get revenue transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
         .from('autonomous_revenue_transactions')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (transactions) {
-        const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      if (transactionsError) {
+        console.error('Error fetching transactions:', transactionsError);
+      }
+
+      if (transactionsData) {
+        const totalRevenue = transactionsData.reduce((sum, t) => sum + Number(t.amount), 0);
         
         // Group by source
         const revenueBySource: Record<string, number> = {};
-        transactions.forEach(t => {
-          const source = (t.metadata as any)?.strategy || 'unknown';
+        transactionsData.forEach(t => {
+          const source = (t.metadata && typeof t.metadata === 'object' && t.metadata.strategy) || 'unknown';
           revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount);
         });
 
         // Create trend data (last 7 days)
-        const revenueTrend = [];
+        const revenueTrend: Array<{ date: string; amount: number }> = [];
         for (let i = 6; i >= 0; i--) {
           const date = new Date();
+          date.setHours(0, 0, 0, 0);
           date.setDate(date.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
           
-          const dayRevenue = transactions
+          const dayRevenue = transactionsData
             .filter(t => t.created_at?.startsWith(dateStr))
             .reduce((sum, t) => sum + Number(t.amount), 0);
           
@@ -96,8 +104,8 @@ const ComprehensiveRevenueAnalytics = () => {
           total_revenue: totalRevenue,
           revenue_by_source: revenueBySource,
           revenue_trend: revenueTrend,
-          optimization_impact: 23.5,
-          success_rate: 98.7
+          optimization_impact: 23.5, // static or could come from another source
+          success_rate: 98.7 // static or could come from another source
         });
       }
 
@@ -219,19 +227,26 @@ const ComprehensiveRevenueAnalytics = () => {
               <h3 className="text-white font-medium mb-4">Revenue by Source</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <RechartsPie>
-                  <RechartsPie
+                  <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
                     outerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
+                    label={(entry) => entry.name}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </RechartsPie>
-                  <Tooltip />
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
+                      border: '1px solid #374151',
+                      borderRadius: '6px'
+                    }}
+                  />
                 </RechartsPie>
               </ResponsiveContainer>
             </div>
