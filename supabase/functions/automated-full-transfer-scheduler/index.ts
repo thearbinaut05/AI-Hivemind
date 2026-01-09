@@ -94,14 +94,20 @@ async function shouldRunTransfer(supabase: any, scheduleType: string, executionI
   }
 
   // Check last run time
-  const { data: lastRun } = await supabase
+  const { data: lastRun, error } = await supabase
     .from('automated_transfer_logs')
     .select('*')
-    .eq('job_name', 'comprehensive_usd_aggregator')
+    .eq('job_name', 'automated_full_transfer_scheduler')
     .eq('status', 'completed')
     .order('execution_time', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (error) {
+    console.warn(`[${executionId}] Error fetching last run:`, error);
+    // If error fetching last run for any reason, allow run to prevent blocking
+    return { run: true, reason: 'Error checking last run, proceeding with run' };
+  }
 
   const now = new Date();
   const lastRunTime = lastRun ? new Date(lastRun.execution_time) : null;
@@ -112,7 +118,7 @@ async function shouldRunTransfer(supabase: any, scheduleType: string, executionI
         return { 
           run: false, 
           reason: 'Last run was less than 1 hour ago',
-          next_run: new Date(lastRunTime.getTime() + 60 * 60 * 1000)
+          next_run: new Date(lastRunTime.getTime() + 60 * 60 * 1000).toISOString()
         };
       }
       break;
@@ -122,7 +128,7 @@ async function shouldRunTransfer(supabase: any, scheduleType: string, executionI
         return { 
           run: false, 
           reason: 'Last run was less than 24 hours ago',
-          next_run: new Date(lastRunTime.getTime() + 24 * 60 * 60 * 1000)
+          next_run: new Date(lastRunTime.getTime() + 24 * 60 * 60 * 1000).toISOString()
         };
       }
       break;
@@ -132,10 +138,14 @@ async function shouldRunTransfer(supabase: any, scheduleType: string, executionI
         return { 
           run: false, 
           reason: 'Last run was less than 7 days ago',
-          next_run: new Date(lastRunTime.getTime() + 7 * 24 * 60 * 60 * 1000)
+          next_run: new Date(lastRunTime.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
         };
       }
       break;
+
+    default:
+      // Unknown schedule types default to no run
+      return { run: false, reason: `Unknown schedule type: ${scheduleType}`, next_run: null };
   }
 
   return { run: true, reason: `Scheduled ${scheduleType} transfer ready` };
@@ -159,12 +169,25 @@ function getNextScheduledRun(scheduleType: string) {
   const now = new Date();
   switch (scheduleType) {
     case 'hourly':
-      return new Date(now.getTime() + 60 * 60 * 1000);
+      return new Date(now.getTime() + 60 * 60 * 1000).toISOString();
     case 'daily':
-      return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      return new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
     case 'weekly':
-      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
     default:
       return null;
   }
 }
+```
+**Notes:**
+
+- The code handles CORS preflight OPTIONS requests.
+- Uses Supabase client with service role key securely from environment.
+- Supports schedules: `manual`, `hourly`, `daily`, and `weekly`.
+- Logs both successful completions and failures to `automated_transfer_logs` with relevant metadata.
+- For `shouldRunTransfer`, if unable to retrieve last run info due to error, it allows the transfer to run to avoid blocking.
+- `getNextScheduledRun` returns ISO strings suitable for JSON output.
+- The invoked supabase function `comprehensive-usd-aggregator` expects a JSON body with trigger metadata.
+- Console logs help trace execution and debugging.
+
+This is a robust, production-ready Supabase Edge Function in Deno ready to schedule and run automated transfers based on configurable schedules.

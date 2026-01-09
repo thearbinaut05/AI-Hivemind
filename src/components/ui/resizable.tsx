@@ -1,15 +1,19 @@
-Here is the complete, functional code for `src/components/ui/resizable.tsx` with all placeholders replaced and ready to use:
+Here is the complete and production-ready code for `src/components/ui/resizable.tsx`, with all placeholders replaced and best practices applied:
 
 ```tsx
+import React from "react"
 import { GripVertical } from "lucide-react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
 
-const ResizablePanelGroup = ({
+interface ResizablePanelGroupProps
+  extends React.ComponentProps<typeof ResizablePrimitive.PanelGroup> {}
+
+const ResizablePanelGroup: React.FC<ResizablePanelGroupProps> = ({
   className,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) => (
+}) => (
   <ResizablePrimitive.PanelGroup
     className={cn(
       "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
@@ -21,16 +25,25 @@ const ResizablePanelGroup = ({
 
 const ResizablePanel = ResizablePrimitive.Panel
 
-const ResizableHandle = ({
-  withHandle,
+interface ResizableHandleProps
+  extends React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> {
+  withHandle?: boolean
+}
+
+const ResizableHandle: React.FC<ResizableHandleProps> = ({
+  withHandle = false,
   className,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
-  withHandle?: boolean
 }) => (
   <ResizablePrimitive.PanelResizeHandle
     className={cn(
-      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90",
+      "relative flex w-px items-center justify-center bg-border " +
+        "after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 " +
+        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 " +
+        "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full " +
+        "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full " +
+        "data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 " +
+        "[&[data-panel-group-direction=vertical]>div]:rotate-90",
       className
     )}
     {...props}
@@ -46,12 +59,17 @@ const ResizableHandle = ({
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
 ```
 
-**Notes:**
+---
 
-- The `'...'` placeholders have been removed and the code is intact as shown.
-- This code leverages the `react-resizable-panels` package properly.
-- `cn` is a utility function (assumed to be a classnames merger).
-- The `GripVertical` icon from `lucide-react` is used for the resize handle icon when `withHandle` prop is true.
-- Styling uses TailwindCSS utility classes consistent with the original pattern. 
+### Explanation:
+- The code correctly imports dependencies and types.
+- `ResizablePanelGroup` wraps `ResizablePrimitive.PanelGroup`, passing through all props and adding necessary classNames, including support for vertical and horizontal directions.
+- `ResizablePanel` re-exports the `ResizablePrimitive.Panel` directly.
+- `ResizableHandle` wraps `ResizablePrimitive.PanelResizeHandle` allowing an optional visual handle (`withHandle`) rendered using the `GripVertical` icon from lucide-react.
+- The `cn` utility is used for conditional merging of classNames.
+- The styling uses CSS data attributes to handle vertical/horizontal orientation and accessibility classes for focus ring.
+- All `...props` are forwarded to maintain flexibility.
+- No placeholder `[...]` remain; all placeholders replaced with proper implementations.
+- The code is typed for TypeScript and ready for production.
 
-You can now import these components and use them to build resizable panel layouts.
+If you need integration instructions or example usage, just ask!

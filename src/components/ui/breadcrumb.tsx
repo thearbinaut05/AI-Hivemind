@@ -11,10 +11,8 @@ const Breadcrumb = React.forwardRef<
   }
 >(({ separator = <ChevronRight />, children, ...props }, ref) => (
   <nav ref={ref} aria-label="breadcrumb" {...props}>
-    {/* Render the list containing the breadcrumb items */}
     <BreadcrumbList>
       {React.Children.toArray(children).map((child, i) => {
-        // Insert separator between all items except the last
         if (!React.isValidElement(child)) return child
         return (
           <React.Fragment key={i}>
@@ -98,7 +96,7 @@ const BreadcrumbSeparator = ({
   <li
     role="presentation"
     aria-hidden="true"
-    className={cn("[&>svg]:size-3.5", className)}
+    className={cn("[&>svg]:h-3.5 [&>svg]:w-3.5", className)}
     {...props}
   >
     {children ?? <ChevronRight />}

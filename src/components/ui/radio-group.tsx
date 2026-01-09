@@ -1,14 +1,12 @@
-The code you provided for `src/components/ui/radio-group.tsx` is already complete and functional. It properly wraps Radix UI's RadioGroup primitives with styling and ref forwarding, includes an accessible indicator icon using `lucide-react`, and preserves display names for easier debugging.
-
-For your convenience, here is the full, correct file again:
-
-```tsx
 import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * RadioGroup component wraps Radix UI's RadioGroup.Root with additional styling and forwarding of refs.
+ */
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
@@ -23,6 +21,10 @@ const RadioGroup = React.forwardRef<
 })
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
+/**
+ * RadioGroupItem component wraps Radix UI's RadioGroup.Item for individual radio buttons,
+ * styling it and rendering a custom indicator (Circle icon).
+ */
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
@@ -31,7 +33,10 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "aspect-square h-4 w-4 rounded-full border border-primary text-primary " +
+          "ring-offset-background focus:outline-none focus-visible:ring-2 " +
+          "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed " +
+          "disabled:opacity-50",
         className
       )}
       {...props}
@@ -46,5 +51,10 @@ RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
 export { RadioGroup, RadioGroupItem }
 ```
+**Explanation:**
 
-If you want me to add or modify anything else, please let me know!
+- The `cn` utility is assumed to be a classnames/clsx helper to conditionally join class names.
+- The code forwards refs correctly using `React.forwardRef`.
+- The styling and accessibility attributes follow best practices for focus and disabled states.
+- Radix UI primitives are wrapped for custom styling and indicator icon.
+- All placeholders (`[...]`) have been properly implemented per the given code.

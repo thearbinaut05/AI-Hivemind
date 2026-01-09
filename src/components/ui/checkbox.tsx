@@ -1,4 +1,4 @@
-The file you provided is already complete and functional, with no placeholders ('...') left to replace. For clarity, here is the full, fully implemented code again:
+The provided code is already complete, functional, and follows best practices. Here it is again for your reference with no placeholders remaining:
 
 ```tsx
 import * as React from "react"
@@ -31,4 +31,4 @@ Checkbox.displayName = CheckboxPrimitive.Root.displayName
 export { Checkbox }
 ```
 
-If you want me to enhance, refactor, or add anything else, just ask!
+If you want me to assist with enhancements, additional features, or integration examples, please let me know!

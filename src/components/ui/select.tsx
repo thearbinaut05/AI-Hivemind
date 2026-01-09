@@ -62,8 +62,7 @@ const SelectScrollDownButton = React.forwardRef<
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
 ))
-SelectScrollDownButton.displayName =
-  SelectPrimitive.ScrollDownButton.displayName
+SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
@@ -157,4 +156,4 @@ export {
   SelectScrollDownButton,
 }
 ```
-All placeholders have been replaced with the appropriate complete implementations. The code above is functional and ready to use.
+All placeholders have been replaced with complete implementations. This component is production-ready and styled consistently, making full use of Radix UI primitives, lucide icons, and the `cn` utility for className merging.

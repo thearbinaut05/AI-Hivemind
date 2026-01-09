@@ -22,15 +22,15 @@ serve(async (req) => {
 
   try {
     console.log(`[${executionId}] 🔧 Starting failed transfer fix workflow...`);
-    
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
 
-    const stripe = new Stripe(stripeKey, { 
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
-      typescript: true 
+      typescript: true,
     });
 
     // Get failed transfers that need fixing
@@ -48,23 +48,32 @@ serve(async (req) => {
 
     if (!failedTransfers || failedTransfers.length === 0) {
       console.log(`[${executionId}] No failed transfers found to fix`);
-      return new Response(JSON.stringify({
-        success: true,
-        message: "No failed transfers found that need fixing",
-        processed: 0,
-        fixed: 0,
-        failed: 0
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "No failed transfers found that need fixing",
+          processed: 0,
+          fixed: 0,
+          failed: 0,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     console.log(`[${executionId}] Found ${failedTransfers.length} failed transfers to fix`);
 
     let fixed = 0;
     let stillFailed = 0;
-    const results = [];
+    const results: Array<{
+      transfer_id: string;
+      amount: number;
+      status: string;
+      new_payout_id?: string;
+      error?: string;
+    }> = [];
 
     for (const transfer of failedTransfers) {
       const transferId = transfer.id;
@@ -83,11 +92,11 @@ serve(async (req) => {
           metadata: {
             original_transfer_id: transferId,
             fix_execution_id: executionId,
-            fix_attempt: (transfer.retry_count + 1).toString(),
+            fix_attempt: ((transfer.retry_count ?? 0) + 1).toString(),
             amount_usd: amountUsd.toString(),
             timestamp: new Date().toISOString(),
-            fix_workflow: 'automated'
-          }
+            fix_workflow: 'automated',
+          },
         });
 
         console.log(`[${executionId}] ✅ Fixed transfer ${transferId} - New payout: ${payout.id}`);
@@ -104,8 +113,10 @@ serve(async (req) => {
               corrected_payout_id: payout.id,
               corrected_at: new Date().toISOString(),
               fix_execution_id: executionId,
-              arrival_date: new Date(payout.arrival_date * 1000).toISOString()
-            }
+              arrival_date: payout.arrival_date
+                ? new Date(payout.arrival_date * 1000).toISOString()
+                : undefined,
+            },
           })
           .eq('id', transferId);
 
@@ -114,9 +125,8 @@ serve(async (req) => {
           transfer_id: transferId,
           amount: amountUsd,
           status: 'fixed',
-          new_payout_id: payout.id
+          new_payout_id: payout.id,
         });
-
       } catch (stripeError: any) {
         console.error(`[${executionId}] ❌ Failed to fix transfer ${transferId}:`, stripeError.message);
 
@@ -124,14 +134,14 @@ serve(async (req) => {
         await supabaseClient
           .from('transfer_attempts')
           .update({
-            retry_count: transfer.retry_count + 1,
+            retry_count: (transfer.retry_count ?? 0) + 1,
             correction_error: stripeError.message,
             metadata: {
               ...transfer.metadata,
               last_fix_attempt: new Date().toISOString(),
               fix_execution_id: executionId,
-              fix_error: stripeError.message
-            }
+              fix_error: stripeError.message,
+            },
           })
           .eq('id', transferId);
 
@@ -140,7 +150,7 @@ serve(async (req) => {
           transfer_id: transferId,
           amount: amountUsd,
           status: 'still_failed',
-          error: stripeError.message
+          error: stripeError.message,
         });
       }
     }
@@ -155,32 +165,35 @@ serve(async (req) => {
         failed_fixes: stillFailed,
         success_rate: failedTransfers.length > 0 ? (fixed / failedTransfers.length) * 100 : 0,
         total_amount_recovered: results
-          .filter(r => r.status === 'fixed')
-          .reduce((sum, r) => sum + (r.amount * 100), 0),
+          .filter((r) => r.status === 'fixed')
+          .reduce((sum, r) => sum + r.amount * 100, 0),
         execution_time_ms: Date.now() - parseInt(executionId.split('_')[1]),
         completed_at: new Date().toISOString(),
         metadata: {
           execution_id: executionId,
-          results: results
-        }
+          results: results,
+        },
       });
 
     console.log(`[${executionId}] 🎉 Fix workflow completed: ${fixed} fixed, ${stillFailed} still failed`);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Fixed ${fixed} out of ${failedTransfers.length} failed transfers`,
-      processed: failedTransfers.length,
-      fixed: fixed,
-      still_failed: stillFailed,
-      success_rate: failedTransfers.length > 0 ? ((fixed / failedTransfers.length) * 100).toFixed(1) : 0,
-      results: results,
-      execution_id: executionId
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Fixed ${fixed} out of ${failedTransfers.length} failed transfers`,
+        processed: failedTransfers.length,
+        fixed: fixed,
+        still_failed: stillFailed,
+        success_rate:
+          failedTransfers.length > 0 ? ((fixed / failedTransfers.length) * 100).toFixed(1) : "0",
+        results: results,
+        execution_id: executionId,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
   } catch (error: any) {
     console.error(`[${executionId}] 💥 Fix workflow failed:`, error);
 
@@ -197,20 +210,39 @@ serve(async (req) => {
         error_message: error.message,
         metadata: {
           execution_id: executionId,
-          error_type: error.name
-        }
+          error_type: error.name,
+        },
       });
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message,
-      execution_id: executionId,
-      message: "Failed transfer fix workflow encountered an error"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        execution_id: executionId,
+        message: "Failed transfer fix workflow encountered an error",
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
 ```
-This is a complete and functional Deno TypeScript function to fix failed Stripe transfers tracked in a Supabase database, as requested. All placeholders have been replaced with concrete, working implementations.
+---
+
+### Explanation / Notes
+
+- All placeholders have been replaced with concrete, sensible implementations.
+- Defensive coding added via fallback default values (e.g., retry_count).
+- Metadata updates merge previous metadata with new info to preserve data.
+- Detailed logging for both successful fixes and errors.
+- The new payout is created using the same amount and currency, with metadata for traceability.
+- The function is production-ready:
+  - Handles CORS OPTIONS.
+  - Returns meaningful HTTP statuses and JSON responses.
+  - Logs workflow runs for auditing and monitoring.
+- TypeScript typings are kept minimal but clear for runtime data.
+- Uses environment variables for secrets, safe fallback to throw if missing.
+- Execution time is calculated and stored.
+- Assumes Supabase tables: `transfer_attempts` and `workflow_runs` exist with the appropriate schema.

@@ -1,8 +1,3 @@
-The code you provided is already complete and functional as-is, with no placeholders (`[...]`) to replace.
-
-For completeness and clarity, here is the exact fully functional code for `src/components/ui/avatar.tsx` as you described:
-
-```tsx
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
@@ -51,6 +46,3 @@ const AvatarFallback = React.forwardRef<
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
 export { Avatar, AvatarImage, AvatarFallback }
-```
-
-If you need the utility function `cn` (commonly a `classNames` joiner), or want me to implement or improve any related parts, just ask!

@@ -1,6 +1,3 @@
-Here's the complete and functional version of your `src/hooks/use-toast.ts` file with all placeholders properly implemented:
-
-```ts
 import * as React from "react"
 
 import type {
@@ -9,7 +6,8 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// Set a reasonable delay to remove toasts after dismissal (in ms)
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -80,7 +78,7 @@ const addToRemoveQueue = (toastId: string) => {
     toastTimeouts.delete(toastId)
     dispatch({
       type: "REMOVE_TOAST",
-      toastId: toastId,
+      toastId,
     })
   }, TOAST_REMOVE_DELAY)
 
@@ -196,16 +194,3 @@ function useToast() {
 }
 
 export { useToast, toast }
-```
-
-### Explanation of the completed parts:
-- **Added `open` and `onOpenChange` to `ToasterToast` type**: To allow controlling and reacting to toast visible state changes.
-- **Implemented the `dispatch` function before `addToRemoveQueue`**: So dispatch is defined and available in `addToRemoveQueue`.
-- **Corrected `UPDATE_TOAST` action type to enforce `id` presence**: `Partial<ToasterToast> & { id: string }` ensures the toast to update is correctly identified.
-- **Filled in `addToRemoveQueue` function**: Uses `setTimeout` to eventually remove toast after a delay.
-- **Completed `toast` function**: Generates unique IDs, dispatches add action, provides update and dismiss handlers.
-- **Completed `useToast` hook**: Uses React state, subscribes/unsubscribes listeners, exposes `toast` method plus dismiss methods.
-- **Ensured correct type usage for `dismiss` and `update` handlers across the code**.
-- Added missing `default` case in the reducer (returning current state).
-
-This code manages toast notifications with add/update/dismiss/remove logic, limits number of simultaneous toasts, and uses an internal memory state with React subscription for UI components to consume.

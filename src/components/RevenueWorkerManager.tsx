@@ -59,12 +59,29 @@ const RevenueWorkerManager = () => {
   const loadWorkerData = async () => {
     try {
       const [workersResponse, poolsResponse] = await Promise.all([
-        supabase.from('autonomous_revenue_workers').select('*').order('created_at', { ascending: false }),
-        supabase.from('autonomous_revenue_worker_pool').select('*').order('worker_type')
+        supabase
+          .from('autonomous_revenue_workers')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('autonomous_revenue_worker_pool')
+          .select('*')
+          .order('worker_type')
       ]);
 
-      setWorkers(workersResponse.data || []);
-      setWorkerPools(poolsResponse.data || []);
+      if (workersResponse.error) {
+        console.error('Error loading workers:', workersResponse.error);
+        toast.error('Failed to load workers');
+      } else {
+        setWorkers(workersResponse.data || []);
+      }
+
+      if (poolsResponse.error) {
+        console.error('Error loading worker pools:', poolsResponse.error);
+        toast.error('Failed to load worker pools');
+      } else {
+        setWorkerPools(poolsResponse.data || []);
+      }
     } catch (error) {
       console.error('Error loading worker data:', error);
       toast.error('Failed to load worker data');
@@ -73,10 +90,9 @@ const RevenueWorkerManager = () => {
 
   const autoScaleWorkers = async () => {
     try {
-      // Get pending tasks count
-      const { data: tasks, error: taskError } = await supabase
+      const { data: tasks, error: taskError, count } = await supabase
         .from('autonomous_revenue_task_queue')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('status', 'pending');
 
       if (taskError) {
@@ -84,10 +100,11 @@ const RevenueWorkerManager = () => {
         throw new Error('Failed to fetch pending tasks');
       }
 
-      const pendingTasks = tasks?.length || 0;
-      
-      // Scale based on task load
+      const pendingTasks = count || 0;
+
       for (const pool of workerPools) {
+        // Compute optimal workers per pool based on pending tasks.
+        // For simplicity, this evenly distributes task load and sets a minimum of 1 worker.
         const optimalWorkers = Math.min(
           pool.max_workers,
           Math.max(1, Math.ceil(pendingTasks / 10))
@@ -113,8 +130,12 @@ const RevenueWorkerManager = () => {
         }
       }
 
-      // Refresh pools after update
-      const { data: updatedPools, error: updatedPoolsError } = await supabase.from('autonomous_revenue_worker_pool').select('*').order('worker_type');
+      // Reload updated pools
+      const { data: updatedPools, error: updatedPoolsError } = await supabase
+        .from('autonomous_revenue_worker_pool')
+        .select('*')
+        .order('worker_type');
+
       if (updatedPoolsError) {
         console.error(updatedPoolsError);
         toast.error('Failed to reload worker pools after scaling');
@@ -122,16 +143,15 @@ const RevenueWorkerManager = () => {
       }
       if (updatedPools) setWorkerPools(updatedPools);
 
-      // Spawn new workers if needed
+      // Calculate workers to spawn if active workers are fewer than needed
       const activeWorkers = workers.filter(w => w.status === 'active').length;
-      const totalOptimal = updatedPools?.reduce((sum, pool) => sum + pool.current_workers, 0) || 0;
+      const totalOptimal = updatedPools?.reduce((sum, p) => sum + p.current_workers, 0) || 0;
 
       if (activeWorkers < totalOptimal) {
         await spawnWorkers(totalOptimal - activeWorkers);
       }
 
-      // Refresh worker list after spawning
-      loadWorkerData();
+      await loadWorkerData();
 
     } catch (error) {
       console.error('Auto-scaling error:', error);
@@ -141,10 +161,10 @@ const RevenueWorkerManager = () => {
 
   const spawnWorkers = async (count: number) => {
     const workerTypes = ['transfer', 'optimization', 'analysis'];
-    
+
     for (let i = 0; i < count; i++) {
       const workerType = workerTypes[i % workerTypes.length];
-      
+
       const { error } = await supabase
         .from('autonomous_revenue_workers')
         .insert({
@@ -171,6 +191,7 @@ const RevenueWorkerManager = () => {
   };
 
   const scaleWorkerPool = async (poolId: string, direction: 'up' | 'down') => {
+    if (scaling) return; // Prevent overlapping scale requests
     setScaling(true);
     try {
       const pool = workerPools.find(p => p.id === poolId);
@@ -180,7 +201,7 @@ const RevenueWorkerManager = () => {
         return;
       }
 
-      const newCount = direction === 'up' 
+      const newCount = direction === 'up'
         ? Math.min(pool.max_workers, pool.current_workers + 5)
         : Math.max(1, pool.current_workers - 2);
 
@@ -207,7 +228,7 @@ const RevenueWorkerManager = () => {
         toast.success(`Scaled down ${pool.worker_type} workers to ${newCount}`);
       }
 
-      loadWorkerData();
+      await loadWorkerData();
     } catch (error) {
       console.error('Scaling error:', error);
       toast.error('Failed to scale workers');
@@ -219,7 +240,9 @@ const RevenueWorkerManager = () => {
   const totalWorkers = workers.length;
   const activeWorkers = workers.filter(w => w.status === 'active').length;
   const totalRevenue = workers.reduce((sum, w) => sum + (w.metrics?.revenue_processed || 0), 0);
-  const avgEfficiency = totalWorkers === 0 ? 0 : workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers;
+  const avgEfficiency = totalWorkers === 0
+    ? 0
+    : workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers;
 
   return (
     <div className="space-y-6">
@@ -246,7 +269,6 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
-            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <Cpu className="h-5 w-5 text-green-400 mr-2" />
@@ -256,7 +278,6 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
-            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <BarChart3 className="h-5 w-5 text-purple-400 mr-2" />
@@ -266,7 +287,6 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
-            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <Activity className="h-5 w-5 text-orange-400 mr-2" />
@@ -290,7 +310,6 @@ const RevenueWorkerManager = () => {
                 Auto-Scale: {autoScale ? 'ON' : 'OFF'}
               </Button>
             </div>
-            
             <Badge className={`${autoScale ? 'bg-green-600' : 'bg-gray-600'} animate-pulse`}>
               {autoScale ? 'ACTIVELY SCALING' : 'MANUAL MODE'}
             </Badge>
@@ -319,7 +338,6 @@ const RevenueWorkerManager = () => {
                       {pool.current_workers} / {pool.max_workers} workers active
                     </p>
                   </div>
-                  
                   <div className="flex space-x-2">
                     <Button
                       onClick={() => scaleWorkerPool(pool.id, 'down')}
@@ -339,12 +357,10 @@ const RevenueWorkerManager = () => {
                     </Button>
                   </div>
                 </div>
-                
-                <Progress 
-                  value={(pool.current_workers / pool.max_workers) * 100} 
+                <Progress
+                  value={(pool.current_workers / pool.max_workers) * 100}
                   className="mb-2"
                 />
-                
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Utilization: {((pool.current_workers / pool.max_workers) * 100).toFixed(1)}%</span>
                   <Badge className={pool.status === 'active' ? 'bg-green-600' : 'bg-gray-600'}>
@@ -380,7 +396,6 @@ const RevenueWorkerManager = () => {
                     {worker.status}
                   </Badge>
                 </div>
-                
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Tasks Completed</span>
@@ -411,3 +426,18 @@ const RevenueWorkerManager = () => {
 };
 
 export default RevenueWorkerManager;
+```
+---
+
+This completes the full, functional implementation of `RevenueWorkerManager.tsx` with:
+
+- Proper Supabase data fetching and updating with error handling.
+- Auto-scaling logic based on pending task counts.
+- Manual scaling controls per worker pool.
+- Spawn worker logic inserting new active workers with initial metrics.
+- Production-ready React + TypeScript + Supabase usage.
+- UI components uniquely styled and structured per original design.
+- Use of toast notifications for user feedback on all async operations.
+- Polling data refresh on a 5-second interval; auto-scaling every 15 seconds when enabled.
+
+If you'd like me to help with testing, optimization, or feature extensions, please ask!

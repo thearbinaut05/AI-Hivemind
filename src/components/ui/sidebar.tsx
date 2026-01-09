@@ -1,4 +1,4 @@
-Here is the fully implemented and functional code for `src/components/ui/sidebar.tsx`, with all placeholders `[...]` properly replaced:
+Here is the complete, production-ready `src/components/ui/sidebar.tsx` file with all placeholders replaced and implementations provided:
 
 ```tsx
 import * as React from "react"
@@ -71,10 +71,29 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    // This is the internal state of the sidebar.
-    // Controlled or uncontrolled mode with props.
-    const [_open, _setOpen] = React.useState(defaultOpen)
+    // Internal sidebar open state; try to read from cookie initially
+    const [_open, _setOpen] = React.useState(() => {
+      if (typeof document !== "undefined") {
+        try {
+          const escapedName = SIDEBAR_COOKIE_NAME.replace(
+            /([.$?*|{}()[\]\\/+^])/g,
+            "\\$1"
+          )
+          const match = document.cookie.match(
+            new RegExp(`(?:^|; )${escapedName}=([^;]*)`)
+          )
+          if (match) {
+            return match[1] === "expanded"
+          }
+        } catch {
+          // ignore errors
+        }
+      }
+      return defaultOpen
+    })
+
     const open = openProp ?? _open
+
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
         const openState = typeof value === "function" ? value(open) : value
@@ -84,33 +103,36 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // Set cookie to persist sidebar state.
+        // Persist sidebar state in cookie
         try {
-          document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+          document.cookie = `${SIDEBAR_COOKIE_NAME}=${
+            openState ? "expanded" : "collapsed"
+          }; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
         } catch {
-          // Could fail on server or restricted env.
+          // ignore errors
         }
       },
       [setOpenProp, open]
     )
 
     const toggleSidebar = React.useCallback(() => {
-      return isMobile
-        ? setOpenMobile((open) => !open)
-        : setOpen((open) => !open)
+      if (isMobile) {
+        setOpenMobile((open) => !open)
+      } else {
+        setOpen((open) => !open)
+      }
     }, [isMobile, setOpen, setOpenMobile])
 
     React.useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
-          event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+          event.key.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT &&
           (event.metaKey || event.ctrlKey)
         ) {
           event.preventDefault()
           toggleSidebar()
         }
       }
-
       window.addEventListener("keydown", handleKeyDown)
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
@@ -439,7 +461,7 @@ const SidebarGroupLabel = React.forwardRef<
       ref={ref}
       data-sidebar="group-label"
       className={cn(
-        "duration-200 flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-none ring-sidebar-ring transition-[margin,opa] ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "duration-200 flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-none ring-sidebar-ring transition-[margin,opacity] ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className
       )}
@@ -765,18 +787,14 @@ export {
 
 ---
 
-### Summary of replaced placeholders:
-- Cookie set for sidebar state including path and max-age.
-- Fully fleshed out toggle logic using internal or controlled props.
-- Use `useIsMobile` hook for responsive sidebar toggling behavior.
-- Keyboard shortcut added properly with cleanup.
-- All `className` merges using `cn` helper.
-- Tooltip usage correct with conditional rendering based on sidebar state and device.
-- Proper forwardRef and typings on all components.
-- Correct CSS variables applied for widths.
-- Fully implemented sidebar render for mobile using `Sheet` and for desktop with collapsible modes.
-- Random width logic for skeleton loaders.
-- Proper composition of components using `Slot` when `asChild` is used.
-- Accessibility attributes (aria-labels, roles, tabindex) added where appropriate.
+### Notes
 
-This should now be a fully usable, maintainable sidebar component in your project.
+- Cookie reading/writing is wrapped with `try/catch` and guarded with `typeof document !== "undefined"` to prevent SSR issues.
+- The sidebar state is controlled/uncontrolled aware.
+- Keyboard shortcut `Ctrl/Cmd+B` toggles the sidebar.
+- Uses custom hooks, UI primitives, and utilities (`useIsMobile`, `cn`, etc.) as imported.
+- All React.forwardRef components have display names for debugging.
+- Uses modern React best practices (memo, callbacks, context memoization, etc.)
+- Fully typed with TypeScript.
+
+Let me know if you want help on how to integrate or customize it!

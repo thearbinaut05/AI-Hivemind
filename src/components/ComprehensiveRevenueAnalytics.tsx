@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Activity, BarChart3, DollarSign, Target, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Target,
-  Zap,
-  Activity,
-  BarChart3,
-  PieChart
-} from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPie, Pie, Cell } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPie,
+  Pie,
+  Cell,
+} from "recharts";
 
 interface RevenueData {
   total_revenue: number;
@@ -41,76 +49,122 @@ const ComprehensiveRevenueAnalytics = () => {
 
   const loadAnalytics = async () => {
     try {
-      // Get revenue streams
+      // Fetch active revenue streams
       const { data: streamsData, error: streamsError } = await supabase
-        .from('autonomous_revenue_streams')
-        .select('*')
-        .eq('status', 'active');
+        .from("autonomous_revenue_streams")
+        .select("*")
+        .eq("status", "active");
 
       if (streamsError) {
-        console.error('Error fetching streams:', streamsError);
-      }
-
-      if (streamsData) {
-        const processedStreams = streamsData.map((stream: any) => ({
+        console.error("Error fetching streams:", streamsError.message);
+        setStreams([]);
+      } else if (streamsData) {
+        const processedStreams: RevenueStream[] = streamsData.map((stream: any) => ({
           id: stream.id,
           name: stream.name,
-          strategy: typeof stream.strategy === 'string' ? stream.strategy : 'unknown',
+          strategy:
+            typeof stream.strategy === "string" && stream.strategy.trim().length > 0
+              ? stream.strategy
+              : "unknown",
           status: stream.status,
-          metrics: (stream.metrics as any) || {}
+          metrics:
+            stream.metrics && typeof stream.metrics === "object"
+              ? {
+                  total_revenue:
+                    typeof stream.metrics.total_revenue === "number"
+                      ? stream.metrics.total_revenue
+                      : undefined,
+                  transaction_count:
+                    typeof stream.metrics.transaction_count === "number"
+                      ? stream.metrics.transaction_count
+                      : undefined,
+                  peak_transaction:
+                    typeof stream.metrics.peak_transaction === "number"
+                      ? stream.metrics.peak_transaction
+                      : undefined,
+                }
+              : {},
         }));
         setStreams(processedStreams);
+      } else {
+        setStreams([]);
       }
 
-      // Get revenue transactions
+      // Fetch revenue transactions sorted by most recent
       const { data: transactionsData, error: transactionsError } = await supabase
-        .from('autonomous_revenue_transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("autonomous_revenue_transactions")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (transactionsError) {
-        console.error('Error fetching transactions:', transactionsError);
-      }
+        console.error("Error fetching transactions:", transactionsError.message);
+        setRevenueData(null);
+      } else if (transactionsData) {
+        // Calculate total revenue across all transactions
+        const totalRevenue = transactionsData.reduce(
+          (sum, t) => sum + Number(t.amount ?? 0),
+          0
+        );
 
-      if (transactionsData) {
-        const totalRevenue = transactionsData.reduce((sum, t) => sum + Number(t.amount), 0);
-        
-        // Group by source
+        // Aggregate revenue by source/strategy from metadata.strategy field
         const revenueBySource: Record<string, number> = {};
-        transactionsData.forEach(t => {
-          const source = (t.metadata && typeof t.metadata === 'object' && t.metadata.strategy) || 'unknown';
-          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount);
+        transactionsData.forEach((t) => {
+          let source = "unknown";
+
+          if (t.metadata) {
+            try {
+              // metadata may be a JSON string or object
+              const metadataObj =
+                typeof t.metadata === "string" ? JSON.parse(t.metadata) : t.metadata;
+              if (
+                metadataObj &&
+                typeof metadataObj === "object" &&
+                typeof metadataObj.strategy === "string" &&
+                metadataObj.strategy.trim()
+              ) {
+                source = metadataObj.strategy;
+              }
+            } catch {
+              source = "unknown";
+            }
+          }
+
+          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount ?? 0);
         });
 
-        // Create trend data (last 7 days)
+        // Build revenue trend data for last 7 days (including today)
         const revenueTrend: Array<{ date: string; amount: number }> = [];
         for (let i = 6; i >= 0; i--) {
           const date = new Date();
           date.setHours(0, 0, 0, 0);
           date.setDate(date.getDate() - i);
-          const dateStr = date.toISOString().split('T')[0];
-          
+          const dateStr = date.toISOString().split("T")[0];
+
           const dayRevenue = transactionsData
-            .filter(t => t.created_at?.startsWith(dateStr))
-            .reduce((sum, t) => sum + Number(t.amount), 0);
-          
-          revenueTrend.push({
-            date: dateStr,
-            amount: dayRevenue
-          });
+            .filter(
+              (t) =>
+                typeof t.created_at === "string" &&
+                t.created_at.startsWith(dateStr)
+            )
+            .reduce((sum, t) => sum + Number(t.amount ?? 0), 0);
+
+          revenueTrend.push({ date: dateStr, amount: dayRevenue });
         }
 
         setRevenueData({
           total_revenue: totalRevenue,
           revenue_by_source: revenueBySource,
           revenue_trend: revenueTrend,
-          optimization_impact: 23.5, // static or could come from another source
-          success_rate: 98.7 // static or could come from another source
+          optimization_impact: 23.5, // Could be computed or fetched elsewhere
+          success_rate: 98.7, // Could be computed or fetched elsewhere
         });
+      } else {
+        setRevenueData(null);
       }
-
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      console.error("Error loading analytics:", error);
+      setStreams([]);
+      setRevenueData(null);
     } finally {
       setLoading(false);
     }
@@ -133,12 +187,14 @@ const ComprehensiveRevenueAnalytics = () => {
     );
   }
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
-  const pieData = revenueData ? Object.entries(revenueData.revenue_by_source).map(([key, value]) => ({
-    name: key,
-    value: value
-  })) : [];
+  const pieData = revenueData
+    ? Object.entries(revenueData.revenue_by_source).map(([key, value]) => ({
+        name: key,
+        value,
+      }))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -153,6 +209,7 @@ const ComprehensiveRevenueAnalytics = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Summary stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-br from-green-900/20 to-emerald-800/20 p-4 rounded-lg border border-green-500/20">
               <div className="flex items-center justify-between mb-2">
@@ -160,7 +217,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <DollarSign className="h-4 w-4 text-green-400" />
               </div>
               <div className="text-2xl font-bold text-green-400">
-                ${revenueData?.total_revenue?.toFixed(2) || '0.00'}
+                ${revenueData?.total_revenue?.toFixed(2) ?? "0.00"}
               </div>
             </div>
 
@@ -170,7 +227,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <Target className="h-4 w-4 text-blue-400" />
               </div>
               <div className="text-2xl font-bold text-blue-400">
-                {revenueData?.success_rate?.toFixed(1) || '0.0'}%
+                {revenueData?.success_rate?.toFixed(1) ?? "0.0"}%
               </div>
             </div>
 
@@ -190,7 +247,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <Zap className="h-4 w-4 text-orange-400" />
               </div>
               <div className="text-2xl font-bold text-orange-400">
-                +{revenueData?.optimization_impact?.toFixed(1) || '0.0'}%
+                +{revenueData?.optimization_impact?.toFixed(1) ?? "0.0"}%
               </div>
             </div>
           </div>
@@ -204,19 +261,19 @@ const ComprehensiveRevenueAnalytics = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="date" stroke="#9CA3AF" />
                   <YAxis stroke="#9CA3AF" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '6px'
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1F2937",
+                      border: "1px solid #374151",
+                      borderRadius: 6,
                     }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#10B981" 
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#10B981"
                     strokeWidth={2}
-                    dot={{ fill: '#10B981' }}
+                    dot={{ fill: "#10B981" }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -240,11 +297,11 @@ const ComprehensiveRevenueAnalytics = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
-                      borderRadius: '6px'
+                      backgroundColor: "#1F2937",
+                      border: "1px solid #374151",
+                      borderRadius: 6,
                     }}
                   />
                 </RechartsPie>
@@ -257,13 +314,15 @@ const ComprehensiveRevenueAnalytics = () => {
             <h3 className="text-white font-medium mb-4">Active Revenue Streams</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {streams.map((stream) => (
-                <div 
+                <div
                   key={stream.id}
                   className="bg-slate-700/30 p-4 rounded-lg border border-slate-600"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-white font-medium">{stream.name}</h4>
-                    <Badge variant="default" className="bg-green-600">
+                    <h4 className="text-white font-medium truncate max-w-[75%]">
+                      {stream.name}
+                    </h4>
+                    <Badge variant="default" className="bg-green-600 capitalize">
                       {stream.strategy}
                     </Badge>
                   </div>
@@ -271,19 +330,19 @@ const ComprehensiveRevenueAnalytics = () => {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Revenue</span>
                       <span className="text-green-400 font-medium">
-                        ${stream.metrics?.total_revenue?.toFixed(2) || '0.00'}
+                        ${stream.metrics?.total_revenue?.toFixed(2) ?? "0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Transactions</span>
                       <span className="text-white">
-                        {stream.metrics?.transaction_count || 0}
+                        {stream.metrics?.transaction_count ?? 0}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Peak</span>
                       <span className="text-orange-400">
-                        ${stream.metrics?.peak_transaction?.toFixed(2) || '0.00'}
+                        ${stream.metrics?.peak_transaction?.toFixed(2) ?? "0.00"}
                       </span>
                     </div>
                   </div>
@@ -298,3 +357,4 @@ const ComprehensiveRevenueAnalytics = () => {
 };
 
 export default ComprehensiveRevenueAnalytics;
+```

@@ -1,8 +1,3 @@
-The provided code is already complete and functional, but it references `toggleVariants` from `"@/components/ui/toggle"` which you need to have defined elsewhere in your project. 
-
-If you want a fully self-contained example including the definition for `toggleVariants` and the utility `cn` for combining class names, here is a complete working version assuming you want a simple toggle variant styles using `class-variance-authority` and a basic `cn` utility:
-
-```tsx
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { type VariantProps, cva } from "class-variance-authority"
@@ -53,7 +48,7 @@ const ToggleGroup = React.forwardRef<
     className={cn("flex items-center justify-center gap-1", className)}
     {...props}
   >
-    <ToggleGroupContext.Provider value={{ variant, size }}>
+    <ToggleGroupContext.Provider value={{ variant: variant ?? "default", size: size ?? "default" }}>
       {children}
     </ToggleGroupContext.Provider>
   </ToggleGroupPrimitive.Root>
@@ -73,8 +68,8 @@ const ToggleGroupItem = React.forwardRef<
       ref={ref}
       className={cn(
         toggleVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
+          variant: variant ?? context.variant,
+          size: size ?? context.size,
         }),
         className
       )}
@@ -89,10 +84,3 @@ ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
 
 export { ToggleGroup, ToggleGroupItem }
 ```
-
-### Notes:
-- This includes a `cn` utility for class name merging.
-- It includes a `toggleVariants` definition using `class-variance-authority` `cva`.
-- The rest of your original code stays the same and works as expected.
-
-This should work as a complete functional `toggle-group.tsx` component file without placeholder content.

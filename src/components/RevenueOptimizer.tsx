@@ -60,7 +60,7 @@ const RevenueOptimizer = () => {
           id: item.id,
           type: item.optimization_type,
           strategy: item.optimization_type,
-          impact: item.success_rate || 0,
+          impact: item.impact ?? 0,
           optimization_id: item.id,
           status: item.status as 'pending' | 'applied' | 'reverted',
           created_at: item.created_at,
@@ -91,21 +91,24 @@ const RevenueOptimizer = () => {
       }
     } catch (error) {
       console.error('Error loading optimizations:', error);
+      toast.error('Failed to load optimizations');
     }
   };
 
   const runOptimization = async () => {
     setIsOptimizing(true);
     try {
+      // Supabase functions.invoke might be imported differently depending on version
       const { data, error } = await supabase.functions.invoke('revenue-optimizer', {
-        body: { action: 'optimize_all' }
+        body: JSON.stringify({ action: 'optimize_all' }),
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (error) throw error;
 
       if (data?.success) {
         toast.success(`🚀 Optimization complete! Applied ${data.optimizations_applied} improvements`);
-        loadOptimizations();
+        await loadOptimizations();
       } else {
         toast.error(data?.message || 'Optimization failed');
       }
@@ -120,17 +123,18 @@ const RevenueOptimizer = () => {
   const revertOptimization = async (optimizationId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('revenue-optimizer', {
-        body: { 
+        body: JSON.stringify({ 
           action: 'revert',
           optimization_id: optimizationId
-        }
+        }),
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (error) throw error;
 
       if (data?.success) {
         toast.success('Optimization reverted successfully');
-        loadOptimizations();
+        await loadOptimizations();
       } else {
         toast.error(data?.message || 'Failed to revert optimization');
       }

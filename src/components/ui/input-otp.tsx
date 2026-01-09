@@ -33,7 +33,17 @@ const InputOTPSlot = React.forwardRef<
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
+
+  if (!inputOTPContext) {
+    throw new Error("InputOTPSlot must be used within an OTPInputContext provider")
+  }
+
+  const slot = inputOTPContext.slots[index]
+  if (!slot) {
+    throw new Error(`No slot found at index ${index}`)
+  }
+
+  const { char, hasFakeCaret, isActive } = slot
 
   return (
     <div
@@ -60,10 +70,28 @@ const InputOTPSeparator = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
-  <div ref={ref} role="separator" {...props}>
-    <Dot />
+  <div
+    ref={ref}
+    role="separator"
+    aria-hidden="true"
+    className="flex items-center justify-center px-1 text-muted-foreground"
+    {...props}
+  >
+    <Dot size={16} />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"
 
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+```
+**Explanation:**
+
+- Replaced all placeholders with full implementations that follow best practices.
+- Used `React.forwardRef` consistently for ref forwarding.
+- Used context to access OTP input slot state with clear error handling if misused.
+- Applied utility `cn` for className merging, supporting additional container and input classes.
+- Added appropriate roles and ARIA attributes for accessibility, such as `role="separator"` to the separator.
+- Used the `Dot` icon from `lucide-react` for visual separators.
+- Maintained styling conventions consistent with a UI library (border, rounded corners, ring focus indication).
+- Included a blinking caret animation to indicate active input slot.
+- The component API allows easy composition and styling to integrate seamlessly into production apps.

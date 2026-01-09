@@ -35,6 +35,9 @@ serve(async (req) => {
     if (balanceError) {
       throw new Error(`Database error retrieving balance: ${balanceError.message}`);
     }
+    if (!appBalance) {
+      throw new Error(`No application balance record found`);
+    }
 
     const balanceAmount = Number(appBalance?.balance_amount || 0);
     console.log(`[${executionId}] 💰 Internal application balance found: $${balanceAmount.toFixed(2)} USD`);
@@ -126,6 +129,8 @@ serve(async (req) => {
               validation_passed: 'true',
               retry_attempt: '1'
             }
+          }, {
+            idempotencyKey: `${idempotencyKey}_retry_1`
           });
 
           console.log(`[${executionId}] ✅ Stripe payout created successfully on retry: ${payout.id}`);
@@ -232,21 +237,25 @@ serve(async (req) => {
     console.error(`[${executionId}] ⏱️ Failed after: ${executionTimeMs}ms`);
 
     // Log error
-    await supabaseClient
-      .from('automated_transfer_logs')
-      .insert({
-        job_name: 'autonomous_balance_transfer',
-        status: 'failed',
-        execution_time: new Date().toISOString(),
-        error_message: error.message,
-        response: {
-          execution_id: executionId,
-          error_type: error.name || 'UnknownError',
+    try {
+      await supabaseClient
+        .from('automated_transfer_logs')
+        .insert({
+          job_name: 'autonomous_balance_transfer',
+          status: 'failed',
+          execution_time: new Date().toISOString(),
           error_message: error.message,
-          execution_time_ms: executionTimeMs,
-          timestamp: new Date().toISOString()
-        }
-      });
+          response: {
+            execution_id: executionId,
+            error_type: error.name || 'UnknownError',
+            error_message: error.message,
+            execution_time_ms: executionTimeMs,
+            timestamp: new Date().toISOString()
+          }
+        });
+    } catch (logError) {
+      console.error(`[${executionId}] ❌ Failed to log error to database:`, logError);
+    }
 
     const errorSummary = {
       execution_id: executionId,

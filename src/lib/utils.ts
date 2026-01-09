@@ -1,13 +1,12 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
+/**
+ * Combines class names using clsx, then merges Tailwind classes to remove duplicates and conflicts.
+ * 
+ * @param inputs - A list of class names or expressions to be merged
+ * @returns The merged string of class names 
+ */
+export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(...inputs))
 }
-```
-
-**Explanation:**
-
-- The original code had `clsx(inputs)` which passes an array (`inputs`) as a single argument. However, `clsx` expects a spread of class values.
-- Changing to `clsx(...inputs)` spreads the array into individual arguments.
-- `twMerge` then merges the resulting class string, resolving conflicts based on Tailwind's rules.

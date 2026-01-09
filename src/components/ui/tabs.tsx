@@ -51,5 +51,3 @@ const TabsContent = React.forwardRef<
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }
-```
-This is the complete and functional code for your `src/components/ui/tabs.tsx` file with no placeholders.

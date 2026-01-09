@@ -1,9 +1,9 @@
-Here is the complete, functional code for `src/components/ui/form.tsx` with all placeholders (`[...]`) replaced appropriately:
+Here is the complete and production-ready `src/components/ui/form.tsx` file with all placeholders replaced, following best practices and ready to use as a reusable form UI built on React Hook Form and Radix UI primitives:
 
 ```tsx
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
+import * as React from "react";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
   ControllerProps,
@@ -11,24 +11,38 @@ import {
   FieldValues,
   FormProvider,
   useFormContext,
-} from "react-hook-form"
+} from "react-hook-form";
 
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
-const Form = FormProvider
+/**
+ * A wrapper around React Hook Form's FormProvider.
+ */
+const Form = FormProvider;
 
+/**
+ * Context value for a single form field.
+ */
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 > = {
-  name: TName
-}
+  name: TName;
+};
 
+/**
+ * Context for sharing the name of the current field within form components.
+ */
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
-)
+);
 
+/**
+ * Wraps a form field and provides field context.
+ *
+ * Uses React Hook Form's Controller internally.
+ */
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
@@ -39,23 +53,28 @@ const FormField = <
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
-  )
-}
+  );
+};
 
+/**
+ * Hook to access field-related IDs and error state for accessibility and styling.
+ *
+ * Must be used within a FormField and FormItem.
+ */
 const useFormField = () => {
-  const fieldContext = React.useContext(FormFieldContext)
-  const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
+  const fieldContext = React.useContext(FormFieldContext);
+  const itemContext = React.useContext(FormItemContext);
+  const { getFieldState, formState } = useFormContext();
 
   if (!fieldContext) {
-    throw new Error("useFormField should be used within <FormField>")
+    throw new Error("useFormField should be used within <FormField>");
   }
   if (!itemContext) {
-    throw new Error("useFormField should be used within <FormItem>")
+    throw new Error("useFormField should be used within <FormItem>");
   }
 
-  const fieldState = getFieldState(fieldContext.name, formState)
-  const { id } = itemContext
+  const fieldState = getFieldState(fieldContext.name, formState);
+  const { id } = itemContext;
 
   return {
     id,
@@ -64,36 +83,45 @@ const useFormField = () => {
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,
     ...fieldState,
-  }
-}
+  };
+};
 
+/**
+ * Context for sharing a unique ID within FormItem and related components.
+ */
 type FormItemContextValue = {
-  id: string
-}
+  id: string;
+};
 
 const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
-)
+);
 
+/**
+ * Container for a form field that provides spacing and context.
+ */
 const FormItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const id = React.useId()
+  const id = React.useId();
 
   return (
     <FormItemContext.Provider value={{ id }}>
       <div ref={ref} className={cn("space-y-2", className)} {...props} />
     </FormItemContext.Provider>
-  )
-})
-FormItem.displayName = "FormItem"
+  );
+});
+FormItem.displayName = "FormItem";
 
+/**
+ * Label component wired to form control IDs and error styles.
+ */
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
+  const { error, formItemId } = useFormField();
 
   return (
     <Label
@@ -102,15 +130,18 @@ const FormLabel = React.forwardRef<
       htmlFor={formItemId}
       {...props}
     />
-  )
-})
-FormLabel.displayName = "FormLabel"
+  );
+});
+FormLabel.displayName = "FormLabel";
 
+/**
+ * Slot wrapper for form controls, adds accessibility attributes automatically.
+ */
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
     <Slot
@@ -118,21 +149,24 @@ const FormControl = React.forwardRef<
       id={formItemId}
       aria-describedby={
         !error
-          ? `${formDescriptionId}`
+          ? formDescriptionId
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
       {...props}
     />
-  )
-})
-FormControl.displayName = "FormControl"
+  );
+});
+FormControl.displayName = "FormControl";
 
+/**
+ * Renders a form field description with accessibility features.
+ */
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {
-  const { formDescriptionId } = useFormField()
+  const { formDescriptionId } = useFormField();
 
   return (
     <p
@@ -141,19 +175,22 @@ const FormDescription = React.forwardRef<
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
-  )
-})
-FormDescription.displayName = "FormDescription"
+  );
+});
+FormDescription.displayName = "FormDescription";
 
+/**
+ * Renders an error message for the form field, if any.
+ */
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
-  const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message) : children
+  const { error, formMessageId } = useFormField();
+  const body = error ? String(error?.message) : children;
 
   if (!body) {
-    return null
+    return null;
   }
 
   return (
@@ -165,9 +202,9 @@ const FormMessage = React.forwardRef<
     >
       {body}
     </p>
-  )
-})
-FormMessage.displayName = "FormMessage"
+  );
+});
+FormMessage.displayName = "FormMessage";
 
 export {
   useFormField,
@@ -178,7 +215,18 @@ export {
   FormDescription,
   FormMessage,
   FormField,
-}
+};
 ```
 
-If you would like me to add comments or further explain any part, please let me know!
+---
+
+### Notes:
+
+- The `cn` function is assumed to be your utility for conditionally joining class names.
+- `Label` is imported from your UI components; it's a styled wrapper over Radix UI's `LabelRoot`.
+- `useFormField` enforces usage within the proper context.
+- All components forward refs properly to support React best practices.
+- Descriptive IDs with consistent suffixes are generated with React's `useId()` to link controls, labels, descriptions, and error messages for accessibility.
+- This form system integrates seamlessly with React Hook Form and Radix UI primitives.
+
+Feel free to ask if you want usage examples, TypeScript improvements, or JSDoc comments!

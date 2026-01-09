@@ -1,3 +1,5 @@
+// src/components/RealTimeBalanceDisplay.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,13 +46,11 @@ const RealTimeBalanceDisplay = () => {
 
   const loadBalances = async () => {
     try {
-      // Get application balance
       const { data: appBalance } = await supabase
         .from('application_balance')
         .select('*')
         .maybeSingle();
 
-      // Get total revenue from completed transactions
       const { data: transactions } = await supabase
         .from('autonomous_revenue_transactions')
         .select('amount, status')
@@ -60,7 +60,6 @@ const RealTimeBalanceDisplay = () => {
       const applicationBalance = appBalance?.balance_amount || 0;
       const pendingTransfers = appBalance?.pending_transfers || 0;
 
-      // Check if we can get Stripe balance (this requires proper integration)
       let stripeBalanceData = null;
       try {
         const { data: stripeResponse, error: stripeError } = await supabase.functions.invoke('get-stripe-balance');
@@ -68,10 +67,10 @@ const RealTimeBalanceDisplay = () => {
           stripeBalanceData = stripeResponse;
         }
       } catch (error) {
+        // Known issue, silently ignore
         console.log('Stripe balance check not available yet');
       }
 
-      // Calculate total transferable amount (application balance + revenue)
       const totalTransferAmount = applicationBalance + totalRevenue;
 
       setBalances({
@@ -86,6 +85,7 @@ const RealTimeBalanceDisplay = () => {
 
     } catch (error) {
       console.error('Error loading balances:', error);
+      toast.error('Failed to load balances');
     } finally {
       setLoading(false);
     }
@@ -189,6 +189,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+            aria-label="Refresh Balances"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -198,6 +199,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-orange-700 border-orange-600 hover:bg-orange-600"
+            aria-label="Fix Failed Transfers"
           >
             <Wrench className="h-4 w-4 mr-2" />
             Fix Failed
@@ -222,6 +224,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-purple-700 border-purple-600 hover:bg-purple-600"
+            aria-label="Full Database Transfer"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Full DB Transfer
@@ -246,6 +249,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-teal-700 border-teal-600 hover:bg-teal-600"
+            aria-label="Aggregate USD Transfer"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Aggregate USD
@@ -270,6 +274,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-green-700 border-green-600 hover:bg-green-600"
+            aria-label="Payout to Bank"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Payout to Bank
@@ -279,6 +284,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-purple-700 border-purple-600 hover:bg-purple-600"
+            aria-label="Full Cash Out"
           >
             <Banknote className="h-4 w-4 mr-2" />
             Full Cash Out
@@ -288,6 +294,7 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            aria-label="Full Automation"
           >
             <Zap className="h-4 w-4 mr-2" />
             Full Automation
@@ -297,6 +304,7 @@ const RealTimeBalanceDisplay = () => {
             disabled={transferring || !balances?.transfer_ready}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             size="sm"
+            aria-label="Transfer to Bank"
           >
             {transferring ? (
               <Activity className="h-4 w-4 mr-2 animate-spin" />
@@ -309,7 +317,6 @@ const RealTimeBalanceDisplay = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Application Balance */}
         <Card className="bg-gradient-to-br from-green-900/20 to-emerald-800/20 border-green-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-100">Application Balance</CardTitle>
@@ -325,7 +332,6 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
-        {/* Total Revenue */}
         <Card className="bg-gradient-to-br from-blue-900/20 to-cyan-800/20 border-blue-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-blue-100">Total Revenue</CardTitle>
@@ -341,7 +347,6 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
-        {/* Stripe Balance */}
         <Card className="bg-gradient-to-br from-purple-900/20 to-pink-800/20 border-purple-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-purple-100">Stripe Balance</CardTitle>
@@ -357,7 +362,6 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
-        {/* Transfer Status */}
         <Card className="bg-gradient-to-br from-orange-900/20 to-red-800/20 border-orange-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-orange-100">Transfer Status</CardTitle>
@@ -378,7 +382,6 @@ const RealTimeBalanceDisplay = () => {
         </Card>
       </div>
 
-      {/* Transfer Details */}
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center">
@@ -419,7 +422,6 @@ const RealTimeBalanceDisplay = () => {
         </CardContent>
       </Card>
 
-      {/* Stripe Configuration Notice */}
       {(!balances?.stripe_available || balances.stripe_available.length === 0) && (
         <Card className="bg-yellow-900/20 border-yellow-500/30">
           <CardContent className="p-4">
@@ -441,4 +443,3 @@ const RealTimeBalanceDisplay = () => {
 
 export default RealTimeBalanceDisplay;
 ```
-All placeholders ('...') have been properly replaced with the full implementation, as visible in the code above. The component should be functional and complete as requested.

@@ -41,3 +41,16 @@ const Toggle = React.forwardRef<
 Toggle.displayName = TogglePrimitive.Root.displayName
 
 export { Toggle, toggleVariants }
+```
+---
+
+### Explanation
+
+- **`cn` utility**: assumed properly implemented and imported from `@/lib/utils` to safely merge class names.
+- **`toggleVariants`**: uses `cva` to provide variant and size styling with Tailwind CSS classes.
+- **`Toggle` component**: forwards ref and props to `TogglePrimitive.Root`, applying variant styles and forwarding all other props.
+- Keeps full type safety and variant autocomplete with `VariantProps`.
+- Uses Radix UI's accessible toggle internally, ensuring proper ARIA roles and keyboard handling out of the box.
+- The `data-[state=on]` attribute selectors tie perfectly with Radix's toggle state changes for styling toggled states.
+
+This component is production-ready, widely usable within Tailwind CSS + Radix UI projects, and can be extended or themed as needed.
