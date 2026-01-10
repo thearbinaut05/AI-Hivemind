@@ -109,5 +109,3 @@ export {
   DrawerTitle,
   DrawerDescription,
 }
-```
-The provided code is complete and production-ready, with all placeholders properly implemented. It conforms to best practices, including proper typing, use of `forwardRef`, clean className merging with the `cn` utility, and semantic component display names for DevTools debugging.

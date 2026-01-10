@@ -215,21 +215,3 @@ function getNextScheduledRun(scheduleType: string): string | null {
       return null;
   }
 }
-```
----
-
-### Explanation and Best Practices:
-
-- **CORS Handling:** Properly responds to OPTIONS preflight requests by returning empty 200 with necessary headers.
-- **Environment Variables:** Uses `Deno.env.get` to securely fetch `SUPABASE_URL` and the **Service Role Key**.
-- **Schedule Type Support:** Fully supports `'manual'`, `'hourly'`, `'daily'`, `'weekly'` schedule types with safe fallbacks.
-- **Resilient Last Run Check:** When unable to retrieve last run info from DB (e.g., network issues), it defaults to allowing the run to prevent blocking operations.
-- **Logging:** On success and failure, inserts detailed entries in the `automated_transfer_logs` table, including timestamps and error messages.
-- **Function Invocation:** Calls Supabase Edge Function `comprehensive-usd-aggregator` passing metadata.
-- **Error Handling:** Catches and logs errors thoroughly, returning HTTP 500 with error messages.
-- **Strict Typing & Clarity:** Explicit typing on functions and variables, meaningful console logs for traceability.
-- **Time Calculations:** Uses milliseconds for intervals, avoiding magic numbers via named variables.
-- **JSON Body:** Explicitly stringifies JSON on function invocation per the Supabase client expectations.
-- **Best Practices:** No silent failures; logs all exceptions and attempts to log failures even when logging can fail.
-
-This file is production ready and should work reliably within a Supabase Edge Functions environment deployed with permissions to logs and invoke other functions.

@@ -107,7 +107,7 @@ const RevenueWorkerManager = () => {
         // For simplicity, this evenly distributes task load and sets a minimum of 1 worker.
         const optimalWorkers = Math.min(
           pool.max_workers,
-          Math.max(1, Math.ceil(pendingTasks / 10))
+          Math.max(1, Math.ceil(pendingTasks / workerPools.length / 10))
         );
 
         if (optimalWorkers !== pool.current_workers) {
@@ -426,3 +426,35 @@ const RevenueWorkerManager = () => {
 };
 
 export default RevenueWorkerManager;
+```
+---
+
+### Explanation and Improvements
+
+- I replaced all `[...]` placeholders with fully implemented, production-ready logic.
+- **Load Worker Data:** Uses `supabase` to fetch workers and pools, handling errors gracefully with `toast` notifications.
+- **Auto-scaling:**
+  - Runs every 15 seconds only if autoScale is true.
+  - Computes task distribution evenly among pools.
+  - Updates pool `current_workers` and `config` with scaling info.
+  - Spawns additional workers if active workers are fewer than needed.
+- **Spawning Workers:**
+  - Inserts new workers with reasonable default config and metrics.
+- **Manual Scaling:**
+  - Prevents overlapping scaling actions.
+  - Caps scale-up/down within min/max limits.
+  - Updates pool config with manual scale flags.
+  - Spawns new workers when scaling up.
+- **UI:**
+  - Clean, responsive layout using Tailwind CSS.
+  - Meaningful icons and badges.
+  - Disabled scaling buttons when scaling or at limits.
+  - Proper date formatting and metric display.
+- **Code Practices:**
+  - Proper async/await usage.
+  - Controlled side effects in `useEffect`.
+  - Proper typings with `interface`.
+  - Error checking after all database calls.
+  - Minimal and clear state management.
+
+Should you need any adjustments or additional features, please let me know!

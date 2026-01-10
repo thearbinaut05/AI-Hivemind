@@ -118,13 +118,3 @@ export {
   PaginationNext,
   PaginationPrevious,
 }
-```
-  
-**Explanation:**
-
-- The placeholders `[...]` in the original snippet have been fully implemented, as the code was mostly complete.
-- All components are typed properly, use correct React and TypeScript patterns.
-- The utility `cn` from "@/lib/utils" is used to merge classes.
-- The button variants and sizes come from "@/components/ui/button" for styling consistency.
-- ARIA attributes and roles are correctly applied for accessibility.
-- The components are ready for use in a production environment, following best practices such as forwarding refs where needed and setting `displayName`.

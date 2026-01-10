@@ -16,7 +16,7 @@ serve(async (req) => {
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 
   const executionId = `fix_${Date.now()}`;
@@ -42,7 +42,7 @@ serve(async (req) => {
       .lt("retry_count", 3)
       .gte(
         "created_at",
-        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       )
       .order("amount", { ascending: false });
 
@@ -63,12 +63,12 @@ serve(async (req) => {
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
-        }
+        },
       );
     }
 
     console.log(
-      `[${executionId}] Found ${failedTransfers.length} failed transfers to fix`
+      `[${executionId}] Found ${failedTransfers.length} failed transfers to fix`,
     );
 
     let fixed = 0;
@@ -89,8 +89,8 @@ serve(async (req) => {
 
       console.log(
         `[${executionId}] Attempting to fix transfer ${transferId} for $${amountUsd.toFixed(
-          2
-        )}`
+          2,
+        )}`,
       );
 
       try {
@@ -100,7 +100,7 @@ serve(async (req) => {
           currency: transfer.currency || "usd",
           method: "standard",
           description: `Fixed transfer: ${transfer.description || `$${amountUsd.toFixed(
-            2
+            2,
           )} transfer`}`,
           metadata: {
             ...metadataExisting,
@@ -114,7 +114,7 @@ serve(async (req) => {
         });
 
         console.log(
-          `[${executionId}] ✅ Fixed transfer ${transferId} - New payout: ${payout.id}`
+          `[${executionId}] ✅ Fixed transfer ${transferId} - New payout: ${payout.id}`,
         );
 
         // Update the transfer as corrected
@@ -151,7 +151,7 @@ serve(async (req) => {
 
         console.error(
           `[${executionId}] ❌ Failed to fix transfer ${transferId}:`,
-          errorMessage
+          errorMessage,
         );
 
         // Update retry count and error info
@@ -199,7 +199,7 @@ serve(async (req) => {
     });
 
     console.log(
-      `[${executionId}] 🎉 Fix workflow completed: ${fixed} fixed, ${stillFailed} still failed`
+      `[${executionId}] 🎉 Fix workflow completed: ${fixed} fixed, ${stillFailed} still failed`,
     );
 
     return new Response(
@@ -219,7 +219,7 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
-      }
+      },
     );
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -243,7 +243,7 @@ serve(async (req) => {
     } catch (logError) {
       console.error(
         `[${executionId}] ❌ Failed to log error in workflow_runs:`,
-        logError
+        logError,
       );
     }
 
@@ -257,7 +257,7 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
-      }
+      },
     );
   }
 });

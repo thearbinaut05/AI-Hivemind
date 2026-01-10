@@ -372,6 +372,9 @@ const ComprehensiveCashOut = () => {
                 onClick={() => setTransferMethod('stripe')}
                 className="flex-1"
                 disabled={transferring}
+                aria-pressed={transferMethod === 'stripe'}
+                aria-label="Select Stripe transfer method"
+                type="button"
               >
                 <CreditCard className="h-4 w-4 mr-2" />
                 Stripe (Bank Account)
@@ -381,6 +384,9 @@ const ComprehensiveCashOut = () => {
                 onClick={() => setTransferMethod('paypal')}
                 className="flex-1"
                 disabled
+                aria-disabled="true"
+                aria-label="PayPal transfer method coming soon"
+                type="button"
               >
                 <Building className="h-4 w-4 mr-2" />
                 PayPal (Coming Soon)
@@ -398,9 +404,11 @@ const ComprehensiveCashOut = () => {
               disabled={transferring || !amounts || amounts.total_transferable < 5}
               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               size="lg"
+              type="button"
+              aria-disabled={transferring || !amounts || amounts.total_transferable < 5}
             >
               {transferring ? (
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" aria-label="Processing transfer" />
               ) : (
                 <ArrowUpRight className="h-5 w-5 mr-2" />
               )}
@@ -414,11 +422,14 @@ const ComprehensiveCashOut = () => {
 
           {/* Custom Amount Transfer */}
           <div className="space-y-2">
-            <Label className="text-white">Custom Amount</Label>
+            <Label htmlFor="customAmount" className="text-white">
+              Custom Amount
+            </Label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
+                  id="customAmount"
                   type="number"
                   placeholder="0.00"
                   value={customAmount}
@@ -434,11 +445,20 @@ const ComprehensiveCashOut = () => {
                     }
                   }}
                   className="pl-10 bg-slate-700 border-slate-600 text-white"
-                  min="5"
+                  min={5}
                   max={amounts?.total_transferable || 0}
                   step="0.01"
                   disabled={transferring}
                   inputMode="decimal"
+                  aria-describedby="amountHelp"
+                  aria-invalid={
+                    customAmount !== '' &&
+                    (isNaN(parseFloat(customAmount)) ||
+                      parseFloat(customAmount) < 5 ||
+                      parseFloat(customAmount) > (amounts?.total_transferable || 0))
+                      ? 'true'
+                      : 'false'
+                  }
                 />
               </div>
               <Button
@@ -451,18 +471,32 @@ const ComprehensiveCashOut = () => {
                   parseFloat(customAmount) > (amounts?.total_transferable || 0)
                 }
                 variant="outline"
+                type="button"
+                aria-disabled={
+                  transferring ||
+                  !customAmount ||
+                  isNaN(parseFloat(customAmount)) ||
+                  parseFloat(customAmount) < 5 ||
+                  parseFloat(customAmount) > (amounts?.total_transferable || 0)
+                    ? 'true'
+                    : 'false'
+                }
               >
                 Transfer
               </Button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p id="amountHelp" className="text-xs text-slate-400">
               Minimum: $5.00 • Maximum: ${amounts?.total_transferable?.toFixed(2) || '0.00'}
             </p>
           </div>
 
           {/* Status Messages */}
           {amounts && amounts.total_transferable < 5 && (
-            <div className="flex items-center p-3 bg-yellow-900/20 rounded-lg border border-yellow-500/20">
+            <div
+              className="flex items-center p-3 bg-yellow-900/20 rounded-lg border border-yellow-500/20"
+              role="alert"
+              aria-live="assertive"
+            >
               <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
               <div>
                 <p className="text-yellow-400 font-medium">Minimum Transfer Not Met</p>
@@ -474,7 +508,11 @@ const ComprehensiveCashOut = () => {
           )}
 
           {amounts && amounts.total_transferable >= 5 && (
-            <div className="flex items-center p-3 bg-green-900/20 rounded-lg border border-green-500/20">
+            <div
+              className="flex items-center p-3 bg-green-900/20 rounded-lg border border-green-500/20"
+              role="status"
+              aria-live="polite"
+            >
               <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
               <div>
                 <p className="text-green-400 font-medium">Ready for Transfer</p>
@@ -494,6 +532,8 @@ const ComprehensiveCashOut = () => {
           variant="outline"
           className="bg-slate-700 border-slate-600 hover:bg-slate-600"
           disabled={loading || transferring}
+          type="button"
+          aria-disabled={loading || transferring}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh Amounts

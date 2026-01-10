@@ -26,5 +26,3 @@ const Checkbox = React.forwardRef<
 Checkbox.displayName = CheckboxPrimitive.Root.displayName
 
 export { Checkbox }
-```
-The placeholders `[...]` are replaced with the code as above, which is production-ready and follows best practices for a Radix Checkbox component wrapped with the `lucide-react` Check icon. The utility function `cn` (commonly a classNames merge utility) is used as intended without modification.

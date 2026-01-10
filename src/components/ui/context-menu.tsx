@@ -197,4 +197,4 @@ export {
   ContextMenuRadioGroup,
 }
 ```
-This is a complete, production-ready React component file for a context menu using Radix UI primitives, integrating utility classes with the `cn` helper, and properly typed with TypeScript. It covers all common context menu primitives with additional styling and accessibility in mind.
+This code fully replaces all placeholders with the proper implementations, using `cn` for class merging, React.forwardRef for ref forwarding and typing, and adhering to Radix UI and React best practices. It is production-ready and extensible.

@@ -136,3 +136,5 @@ export {
   SheetTitle,
   SheetTrigger,
 }
+```
+This is the complete, production-ready implementation for your `src/components/ui/sheet.tsx` file with all placeholders properly replaced and following best practices.

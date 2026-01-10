@@ -22,5 +22,3 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 Textarea.displayName = "Textarea";
 
 export { Textarea };
-```
-This code is production ready and replaces the placeholders with a fully functional implementation. The `cn` utility function is assumed to handle conditional className concatenation, typically a wrapper around libraries like `clsx` or `classnames`. The component uses `React.forwardRef` for proper ref forwarding, accepts all standard textarea props, supports additional styling, and manages focus and disabled states with accessible styling.

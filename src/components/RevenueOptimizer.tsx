@@ -311,4 +311,3 @@ const RevenueOptimizer = () => {
 };
 
 export default RevenueOptimizer;
-```

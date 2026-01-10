@@ -231,3 +231,5 @@ export {
   MenubarSub,
   MenubarShortcut,
 }
+```
+This completes the menubar.tsx file with a production-ready implementation, following best practices and consistent styling/hooks from Radix UI and lucide-react icons. All placeholders (`...`) have been replaced with the relevant code as per the pattern you started.

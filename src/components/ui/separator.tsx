@@ -44,22 +44,3 @@ const Separator = React.forwardRef<
 Separator.displayName = SeparatorPrimitive.Root.displayName
 
 export { Separator }
-```
----
-
-### Explanation of changes:
-
-- Replaced the placeholder `'...'` in the className definitions with Tailwind CSS classes for 1px height or width:
-  - `"h-[1px]"` → `"h-px"`
-  - `"w-[1px]"` → `"w-px"`
-  
-  This keeps the utility classes cleaner and respects Tailwind best practices.
-
-- The rest of the code is fully functional and production-ready:
-  - Uses `React.forwardRef` for ref forwarding.
-  - Uses Radix UI's `SeparatorPrimitive.Root`, passing through all props.
-  - Provides default values for `orientation` and `decorative`.
-  - Handles the `className` merging cleanly with `clsx`.
-  - Uses correct typings and displayName for DevTools and typing clarity.
-
-You can now use this separator component in your UI with optional orientation and decorative settings.

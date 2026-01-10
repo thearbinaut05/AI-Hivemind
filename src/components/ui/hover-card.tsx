@@ -29,5 +29,3 @@ const HoverCardContent = React.forwardRef<
 HoverCardContent.displayName = HoverCardPrimitive.Content.displayName
 
 export { HoverCard, HoverCardTrigger, HoverCardContent }
-```
-This code is now complete and production-ready. It properly forwards refs for the `HoverCardContent` component, sets sensible default alignment and offset values, uses the `cn` utility to merge classes cleanly, and exports the components with appropriate display names for ease of debugging.

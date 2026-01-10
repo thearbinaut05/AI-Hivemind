@@ -1,6 +1,3 @@
-Here is the complete, production-ready implementation for `src/components/ui/toggle-group.tsx`. All placeholders `[...]` have been replaced, and best practices such as proper typing, context defaults, and display names are established.
-
-```tsx
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { type VariantProps, cva } from "class-variance-authority"
@@ -87,17 +84,3 @@ const ToggleGroupItem = React.forwardRef<
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName || "ToggleGroupItem"
 
 export { ToggleGroup, ToggleGroupItem }
-```
-
----
-
-### Explanation of key decisions:
-
-- **`cn` utility**: Simple helper to merge class names safely.
-- **`toggleVariants`**: Uses `cva` from `class-variance-authority` to manage styles variants and sizes in a scalable pattern.
-- **`ToggleGroupContext`**: Provides `variant` and `size` to its descendants so you don't have to pass down props explicitly to every item.
-- **`React.forwardRef`**: Properly forwards refs to Radix UI components, which is critical when using these primitives.
-- **Default context values and fallback display names**: Ensures the components behave gracefully and display names aid debugging.
-- **Types**: Uses proper types from `React` and Radix UI, relying on polymorphic components signature.
-
-This file is now fully functional and ready to integrate within your component library following current React and TypeScript standards.

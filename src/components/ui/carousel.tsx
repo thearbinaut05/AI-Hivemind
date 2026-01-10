@@ -261,20 +261,3 @@ export {
   CarouselPrevious,
   CarouselNext,
 }
-```
-  
----
-
-**Explanation:**
-
-All placeholders `[...]` have been replaced with their proper implementations according to the usage and imports in the file:
-
-- The `scrollPrev` and `scrollNext` callbacks call the Embla API's scrolling methods.
-- The arrow key handler handles keyboard navigation on the carousel container.
-- Component structure and accessibility (ARIA roles, labels, keyboard handlers) are properly implemented.
-- Styling uses `cn` utility and Tailwind CSS classes as per best practices.
-- The `setApi` callback is triggered once the Embla API is created, allowing outside control if desired.
-- The display names of React forwardRef components are set for better debugging.
-- All types are strictly typed with TypeScript ensuring strong typing.
-
-This code is production-ready and follows best practices for React components, accessibility, type safety, and integration with `embla-carousel-react`.

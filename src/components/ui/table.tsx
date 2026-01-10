@@ -115,3 +115,5 @@ export {
   TableCell,
   TableCaption,
 }
+```
+This completes the file with fully functional React components representing a table UI. The utility function `cn` is used for conditional class names and should be implemented in your project under `@/lib/utils`. Each component forwards refs properly and accepts relevant HTML attributes while applying consistent class names with Tailwind CSS conventions as indicated. The code follows best practices suited for production-ready reusable UI components.

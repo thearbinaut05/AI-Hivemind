@@ -256,18 +256,3 @@ serve(async (req) => {
   }
 });
 ```
-  
----
-
-### Explanation / Improvements
-
-- Added handling if `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` are missing, respond early.
-- Added error checks after each Supabase query; throw errors to be caught and handled in the catch block.
-- Added `created_at` timestamps on insert to keep record consistency.
-- Enforced currency string comparisons with `.toLowerCase()` or `.toUpperCase()` consistently.
-- Added `status === 'success'` filter for autonomous_revenue_transactions to exclude failed or pending transactions in aggregation.
-- Kept all operations async and used Promise.all for parallel querying.
-- Used proper retry logic for Stripe transfer creation: retry only on retryable error codes/types, and stop if non-retryable or max attempts reached.
-- In the transfer failure insert/update, minimized overwriting by limiting to last record based on creation date.
-- Proper CORS headers and JSON content-type headers for all responses.
-- Code is clean, with consistent naming and spacing — production ready for Supabase edge function.

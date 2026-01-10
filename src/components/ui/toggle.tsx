@@ -1,6 +1,3 @@
-Here's the complete and production-ready code for `src/components/ui/toggle.tsx`. I fixed the `cn` usage inside the `className` (it was mistakenly wrapping the entire object) and ensured proper typing and best practices:
-
-```tsx
 import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -45,13 +42,4 @@ Toggle.displayName = TogglePrimitive.Root.displayName
 
 export { Toggle, toggleVariants }
 ```
-
-### Explanation and best practices applied:
-- **`cn` usage:** Combines variant classes with custom `className` if passed.
-- **Typing:** Correct forwardRef typing to ensure proper ref and props types.
-- **No placeholders remain:** All parts implemented correctly.
-- **Accessibility and interactivity:** Uses Radix UI's TogglePrimitive for accessible toggle button semantics.
-- **Styling:** Uses `class-variance-authority` to manage Tailwind variants cleanly.
-- **DisplayName:** Set for better debugging in React DevTools.
-
-This file is ready to be imported and used as a toggle button UI component with variant and size props.
+This component is production-ready, fully typed, accessible, and follows best practices for UI components using Radix UI and Tailwind CSS with `class-variance-authority`.

@@ -1,8 +1,3 @@
-The provided code is already complete, functional, and written according to best practices for a React switch component using Radix UI primitives.
-
-Here's the full `src/components/ui/switch.tsx` file with all placeholders properly implemented:
-
-```tsx
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 
@@ -41,6 +36,3 @@ const Switch = React.forwardRef<
 Switch.displayName = SwitchPrimitives.Root.displayName
 
 export { Switch }
-```
-
-If you need help implementing or improving the `cn` utility or integrating this component into your app, just let me know!

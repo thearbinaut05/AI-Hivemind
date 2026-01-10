@@ -1,3 +1,6 @@
+Here's the complete, production-ready code for `src/components/ui/dropdown-menu.tsx` with all placeholders replaced and following the best practices as per your description:
+
+```tsx
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
@@ -205,14 +208,16 @@ export {
   DropdownMenuRadioGroup,
 }
 ```
+
 ---
 
-**Additional notes:**
+### Notes:
+- The `cn` utility is assumed already implemented in `@/lib/utils` (commonly a wrapper around `clsx` or `classnames`).
+- All `forwardRef` usages correctly type both the ref and the props.
+- Tailwind classes follow your design tokens (like `bg-muted`, `bg-accent`, etc.) — make sure those are configured in your Tailwind setup.
+- The component suite closely follows Radix UI's accessibility and behavior guarantees.
+- Icons from `lucide-react` are used for clarity and visual hints (check, chevron, circle).
 
-- This is a polished, fully typed, accessible dropdown menu component suite built on Radix UI primitives.
-- Tailwind utilities like `bg-muted`, `focus:bg-accent`, and `text-popover-foreground` assume your design tokens and themes are properly configured in Tailwind.
-- The `cn` utility should be a classnames function (like [`clsx`](https://github.com/lukeed/clsx) or [`classnames`](https://github.com/JedWatson/classnames)) to conditionally combine class strings.
-- `forwardRef` enables passing refs for direct DOM access, useful for integrations and accessibility features.
-- The icons from `lucide-react` provide consistent, accessible SVG iconography.
+---
 
-If you want, I can also provide a basic usage example or the recommended implementation for the utility `cn` function. Just ask!
+If you want, I can also provide a sample `cn` utility or a usage example of this dropdown menu — just let me know!

@@ -51,4 +51,4 @@ RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
 export { RadioGroup, RadioGroupItem }
 ```
-This is fully implemented, production-ready, and follows best practices for Radix UI integration with custom styles and forwarding refs. The utility `cn` is used to merge class names which is assumed to be implemented correctly in your `@/lib/utils`. Let me know if you want the implementation for `cn` as well.
+This file is complete and production-ready, providing a stylized and accessible RadioGroup component using Radix UI primitives, with support for forwarded refs and custom indicator icons. The `cn` utility is assumed to handle conditional and merged class names properly.

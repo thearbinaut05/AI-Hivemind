@@ -90,6 +90,7 @@ const RealTimeBalanceDisplay = () => {
         }
       } catch (error) {
         // Known issue, silently ignore
+        // eslint-disable-next-line no-console
         console.log('Stripe balance check not available yet');
       }
 
@@ -108,6 +109,7 @@ const RealTimeBalanceDisplay = () => {
       });
 
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading balances:', error);
       toast.error('Failed to load balances');
     } finally {
@@ -169,6 +171,7 @@ const RealTimeBalanceDisplay = () => {
         toast.info(data?.message || 'No funds available for transfer');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Transfer error:', error);
       toast.error('Transfer failed - please check your Stripe configuration');
       await loadBalances();
@@ -195,6 +198,7 @@ const RealTimeBalanceDisplay = () => {
         toast.error(data?.message || 'Failed to fix transfers');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Fix failed transfers error:', error);
       toast.error('Failed to run transfer fix workflow');
     }
@@ -251,6 +255,7 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Full database transfer failed');
                 }
               } catch (e) {
+                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Full database transfer failed');
               }
@@ -276,6 +281,7 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Aggregate transfer failed');
                 }
               } catch (e) {
+                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Aggregate transfer failed. Check Edge Function logs.');
               }
@@ -301,6 +307,7 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Payout failed');
                 }
               } catch (e) {
+                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Payout failed. Check Edge Function logs.');
               }

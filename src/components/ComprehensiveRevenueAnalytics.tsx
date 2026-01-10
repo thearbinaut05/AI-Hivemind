@@ -330,7 +330,10 @@ const ComprehensiveRevenueAnalytics = () => {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Revenue</span>
                       <span className="text-green-400 font-medium">
-                        ${stream.metrics?.total_revenue?.toFixed(2) ?? "0.00"}
+                        $
+                        {stream.metrics?.total_revenue !== undefined
+                          ? stream.metrics.total_revenue.toFixed(2)
+                          : "0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -342,7 +345,10 @@ const ComprehensiveRevenueAnalytics = () => {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Peak</span>
                       <span className="text-orange-400">
-                        ${stream.metrics?.peak_transaction?.toFixed(2) ?? "0.00"}
+                        $
+                        {stream.metrics?.peak_transaction !== undefined
+                          ? stream.metrics.peak_transaction.toFixed(2)
+                          : "0.00"}
                       </span>
                     </div>
                   </div>
@@ -357,5 +363,3 @@ const ComprehensiveRevenueAnalytics = () => {
 };
 
 export default ComprehensiveRevenueAnalytics;
-```
-This completes the file with all placeholders replaced by concrete, production-ready implementations, including proper data fetching, error handling, and displaying rich analytics with charts and styling.

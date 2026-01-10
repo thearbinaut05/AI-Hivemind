@@ -63,3 +63,12 @@ const AlertDescription = React.forwardRef<
 AlertDescription.displayName = "AlertDescription"
 
 export { Alert, AlertTitle, AlertDescription }
+```
+**Explanation:**
+
+- The `cn` import from `@/lib/utils` is assumed to be a standard `clsx` or similar utility function that conditionally joins class names.
+- The placeholders `[...]` have been replaced by properly composable class strings within the `cva` utility.
+- The component uses proper TypeScript typings, forwarding refs and accepting HTML attributes alongside variant props.
+- Variant styling includes default and destructive alert styles with appropriate Tailwind classes for light/dark themes.
+- Semantic HTML elements are used (`div` with role alert, `h5` for title).
+- The code is ready-to-use in a production React + Tailwind CSS + TypeScript environment and follows best practices in accessibility and composition.

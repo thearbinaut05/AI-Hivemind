@@ -134,5 +134,3 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 }
-```
-This code fully replaces all placeholders with proper functional implementations. It follows best practices including type safety, forwardRef usage, clean className merging with `cn`, and proper displayName settings for React DevTools. The dialog is accessible, composable, and ready for production use.
