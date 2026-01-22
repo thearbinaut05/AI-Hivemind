@@ -7,40 +7,151 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      Accounts: {
+      accounting_journal_entries: {
         Row: {
-          attrs: Json | null
-          business_type: string | null
-          country: string | null
-          created: string | null
-          email: string | null
-          id: string | null
-          type: string | null
+          account_id: string
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          journal_id: string
+          line_number: number
         }
         Insert: {
-          attrs?: Json | null
-          business_type?: string | null
-          country?: string | null
-          created?: string | null
-          email?: string | null
-          id?: string | null
-          type?: string | null
+          account_id: string
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          journal_id: string
+          line_number: number
         }
         Update: {
-          attrs?: Json | null
-          business_type?: string | null
-          country?: string | null
-          created?: string | null
-          email?: string | null
-          id?: string | null
-          type?: string | null
+          account_id?: string
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          journal_id?: string
+          line_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_journal_entries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_journal_entries_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_journals: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          journal_number: string
+          metadata: Json | null
+          posted_at: string | null
+          reference_number: string | null
+          reversed_at: string | null
+          status: string | null
+          total_credit: number
+          total_debit: number
+          transaction_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          journal_number: string
+          metadata?: Json | null
+          posted_at?: string | null
+          reference_number?: string | null
+          reversed_at?: string | null
+          status?: string | null
+          total_credit?: number
+          total_debit?: number
+          transaction_date: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          journal_number?: string
+          metadata?: Json | null
+          posted_at?: string | null
+          reference_number?: string | null
+          reversed_at?: string | null
+          status?: string | null
+          total_credit?: number
+          total_debit?: number
+          transaction_date?: string
+        }
+        Relationships: []
+      }
+      ad_network_config: {
+        Row: {
+          api_key_encrypted: string | null
+          config: Json | null
+          created_at: string | null
+          id: string
+          network_name: string
+          publisher_id: string | null
+          revenue_share_percentage: number | null
+          status: string
+          updated_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          network_name: string
+          publisher_id?: string | null
+          revenue_share_percentage?: number | null
+          status?: string
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          network_name?: string
+          publisher_id?: string | null
+          revenue_share_percentage?: number | null
+          status?: string
+          updated_at?: string | null
+          zone_id?: string | null
         }
         Relationships: []
       }
@@ -172,72 +283,114 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_trail: {
+      auctions: {
         Row: {
-          action: string
+          category: string | null
+          condition: string | null
+          created_at: string | null
+          current_price: number
+          end_time: string | null
           id: string
-          ip_address: unknown | null
-          new_values: Json | null
-          old_values: Json | null
-          record_id: string
-          table_name: string
-          timestamp: string
-          user_agent: string | null
+          image_url: string | null
+          marketplace_fees: number | null
+          profit_margin: number | null
+          profit_potential: number | null
+          retail_price: number | null
+          shipping_cost: number | null
+          source_url: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          action: string
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          current_price: number
+          end_time?: string | null
           id?: string
-          ip_address?: unknown | null
-          new_values?: Json | null
-          old_values?: Json | null
-          record_id: string
-          table_name: string
-          timestamp?: string
-          user_agent?: string | null
+          image_url?: string | null
+          marketplace_fees?: number | null
+          profit_margin?: number | null
+          profit_potential?: number | null
+          retail_price?: number | null
+          shipping_cost?: number | null
+          source_url?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          action?: string
+          category?: string | null
+          condition?: string | null
+          created_at?: string | null
+          current_price?: number
+          end_time?: string | null
           id?: string
-          ip_address?: unknown | null
-          new_values?: Json | null
-          old_values?: Json | null
-          record_id?: string
-          table_name?: string
-          timestamp?: string
-          user_agent?: string | null
+          image_url?: string | null
+          marketplace_fees?: number | null
+          profit_margin?: number | null
+          profit_potential?: number | null
+          retail_price?: number | null
+          shipping_cost?: number | null
+          source_url?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
-      automated_transfer_logs: {
+      automation_settings: {
         Row: {
-          created_at: string
-          error_message: string | null
-          execution_time: string
+          auto_scraping_enabled: boolean | null
+          auto_transfer_enabled: boolean | null
+          bank_account_details: Json | null
+          blacklist_keywords: Json | null
+          created_at: string | null
           id: string
-          job_name: string
-          response: Json | null
-          status: string
+          max_bid_amount: number | null
+          min_profit_threshold: number | null
+          min_transfer_amount: number | null
+          preferred_categories: Json | null
+          scraping_frequency_hours: number | null
+          stripe_account_id: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          created_at?: string
-          error_message?: string | null
-          execution_time?: string
+          auto_scraping_enabled?: boolean | null
+          auto_transfer_enabled?: boolean | null
+          bank_account_details?: Json | null
+          blacklist_keywords?: Json | null
+          created_at?: string | null
           id?: string
-          job_name: string
-          response?: Json | null
-          status: string
+          max_bid_amount?: number | null
+          min_profit_threshold?: number | null
+          min_transfer_amount?: number | null
+          preferred_categories?: Json | null
+          scraping_frequency_hours?: number | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          created_at?: string
-          error_message?: string | null
-          execution_time?: string
+          auto_scraping_enabled?: boolean | null
+          auto_transfer_enabled?: boolean | null
+          bank_account_details?: Json | null
+          blacklist_keywords?: Json | null
+          created_at?: string | null
           id?: string
-          job_name?: string
-          response?: Json | null
-          status?: string
+          max_bid_amount?: number | null
+          min_profit_threshold?: number | null
+          min_transfer_amount?: number | null
+          preferred_categories?: Json | null
+          scraping_frequency_hours?: number | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -291,41 +444,6 @@ export type Database = {
           vm_instance_id?: string | null
         }
         Relationships: []
-      }
-      autonomous_optimization_history: {
-        Row: {
-          created_at: string | null
-          id: string
-          new_value: Json
-          optimization_type: string
-          previous_value: Json
-          stream_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          new_value: Json
-          optimization_type: string
-          previous_value: Json
-          stream_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          new_value?: Json
-          optimization_type?: string
-          previous_value?: Json
-          stream_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "autonomous_optimization_history_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "autonomous_revenue_streams"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       autonomous_revenue_alerts: {
         Row: {
@@ -669,91 +787,32 @@ export type Database = {
         }
         Relationships: []
       }
-      autonomous_revenue_transactions: {
-        Row: {
-          amount: number
-          contract_liability: number | null
-          created_at: string | null
-          currency: string | null
-          id: string
-          metadata: Json | null
-          performance_obligation_satisfied: boolean | null
-          revenue_recognition_date: string | null
-          status: string
-          stream_id: string
-          stripe_charge_id: string | null
-          stripe_customer_id: string | null
-          stripe_payment_intent_id: string | null
-          transaction_price_allocated: number | null
-        }
-        Insert: {
-          amount: number
-          contract_liability?: number | null
-          created_at?: string | null
-          currency?: string | null
-          id?: string
-          metadata?: Json | null
-          performance_obligation_satisfied?: boolean | null
-          revenue_recognition_date?: string | null
-          status?: string
-          stream_id: string
-          stripe_charge_id?: string | null
-          stripe_customer_id?: string | null
-          stripe_payment_intent_id?: string | null
-          transaction_price_allocated?: number | null
-        }
-        Update: {
-          amount?: number
-          contract_liability?: number | null
-          created_at?: string | null
-          currency?: string | null
-          id?: string
-          metadata?: Json | null
-          performance_obligation_satisfied?: boolean | null
-          revenue_recognition_date?: string | null
-          status?: string
-          stream_id?: string
-          stripe_charge_id?: string | null
-          stripe_customer_id?: string | null
-          stripe_payment_intent_id?: string | null
-          transaction_price_allocated?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "autonomous_revenue_transactions_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "autonomous_revenue_streams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       autonomous_revenue_transfer_logs: {
         Row: {
           amount: number
-          created_at: string
-          destination_account: string
+          created_at: string | null
+          destination_account: string | null
           id: string
-          metadata: Json
-          source_account: string
+          metadata: Json | null
+          source_account: string | null
           status: string
         }
         Insert: {
           amount: number
-          created_at?: string
-          destination_account: string
+          created_at?: string | null
+          destination_account?: string | null
           id?: string
-          metadata?: Json
-          source_account: string
+          metadata?: Json | null
+          source_account?: string | null
           status: string
         }
         Update: {
           amount?: number
-          created_at?: string
-          destination_account?: string
+          created_at?: string | null
+          destination_account?: string | null
           id?: string
-          metadata?: Json
-          source_account?: string
+          metadata?: Json | null
+          source_account?: string | null
           status?: string
         }
         Relationships: []
@@ -893,42 +952,87 @@ export type Database = {
         }
         Relationships: []
       }
-      "Balance Transactions": {
+      autopilot_config: {
         Row: {
-          amount: number | null
-          attrs: Json | null
-          created: string | null
-          currency: string | null
-          description: string | null
-          fee: number | null
-          id: string | null
-          net: number | null
-          status: string | null
-          type: string | null
+          cashout_percentage: number | null
+          created_at: string | null
+          daily_cashout_count: number | null
+          email: string
+          enabled: boolean | null
+          frequency_minutes: number | null
+          id: number
+          last_cashout_at: string | null
+          last_check: string | null
+          max_daily_cashouts: number | null
+          min_balance: number | null
+          payout_method: string | null
+          total_amount_cashed_out: number | null
+          total_cashouts: number | null
+          updated_at: string | null
         }
         Insert: {
-          amount?: number | null
-          attrs?: Json | null
-          created?: string | null
-          currency?: string | null
-          description?: string | null
-          fee?: number | null
-          id?: string | null
-          net?: number | null
-          status?: string | null
-          type?: string | null
+          cashout_percentage?: number | null
+          created_at?: string | null
+          daily_cashout_count?: number | null
+          email?: string
+          enabled?: boolean | null
+          frequency_minutes?: number | null
+          id?: number
+          last_cashout_at?: string | null
+          last_check?: string | null
+          max_daily_cashouts?: number | null
+          min_balance?: number | null
+          payout_method?: string | null
+          total_amount_cashed_out?: number | null
+          total_cashouts?: number | null
+          updated_at?: string | null
         }
         Update: {
-          amount?: number | null
-          attrs?: Json | null
-          created?: string | null
-          currency?: string | null
-          description?: string | null
-          fee?: number | null
-          id?: string | null
-          net?: number | null
-          status?: string | null
-          type?: string | null
+          cashout_percentage?: number | null
+          created_at?: string | null
+          daily_cashout_count?: number | null
+          email?: string
+          enabled?: boolean | null
+          frequency_minutes?: number | null
+          id?: number
+          last_cashout_at?: string | null
+          last_check?: string | null
+          max_daily_cashouts?: number | null
+          min_balance?: number | null
+          payout_method?: string | null
+          total_amount_cashed_out?: number | null
+          total_cashouts?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      autopilot_logs: {
+        Row: {
+          action: string
+          attempted_amount: number | null
+          balance_at_time: number | null
+          created_at: string | null
+          details: Json | null
+          error_message: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          attempted_amount?: number | null
+          balance_at_time?: number | null
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          attempted_amount?: number | null
+          balance_at_time?: number | null
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
         }
         Relationships: []
       }
@@ -983,24 +1087,45 @@ export type Database = {
         }
         Relationships: []
       }
-      Balances: {
+      bank_connections_registry: {
         Row: {
-          amount: number | null
-          attrs: Json | null
-          balance_type: string | null
-          currency: string | null
+          api_endpoint: string | null
+          connection_metadata: Json | null
+          created_at: string | null
+          credentials_encrypted: string | null
+          error_count: number | null
+          id: string
+          is_real_time: boolean | null
+          last_check: string | null
+          provider: string
+          status: string
+          updated_at: string | null
         }
         Insert: {
-          amount?: number | null
-          attrs?: Json | null
-          balance_type?: string | null
-          currency?: string | null
+          api_endpoint?: string | null
+          connection_metadata?: Json | null
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          error_count?: number | null
+          id?: string
+          is_real_time?: boolean | null
+          last_check?: string | null
+          provider: string
+          status?: string
+          updated_at?: string | null
         }
         Update: {
-          amount?: number | null
-          attrs?: Json | null
-          balance_type?: string | null
-          currency?: string | null
+          api_endpoint?: string | null
+          connection_metadata?: Json | null
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          error_count?: number | null
+          id?: string
+          is_real_time?: boolean | null
+          last_check?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1134,6 +1259,42 @@ export type Database = {
           },
         ]
       }
+      cash_app_integration: {
+        Row: {
+          auto_transfer: boolean | null
+          cashtag: string
+          created_at: string | null
+          id: string
+          integration_status: string | null
+          last_transfer_at: string | null
+          minimum_transfer_amount: number | null
+          total_transferred: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_transfer?: boolean | null
+          cashtag: string
+          created_at?: string | null
+          id?: string
+          integration_status?: string | null
+          last_transfer_at?: string | null
+          minimum_transfer_amount?: number | null
+          total_transferred?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_transfer?: boolean | null
+          cashtag?: string
+          created_at?: string | null
+          id?: string
+          integration_status?: string | null
+          last_transfer_at?: string | null
+          minimum_transfer_amount?: number | null
+          total_transferred?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cash_out_requests: {
         Row: {
           amount: number
@@ -1167,45 +1328,6 @@ export type Database = {
           status?: string | null
           transaction_id?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      Charges: {
-        Row: {
-          amount: number | null
-          attrs: Json | null
-          created: string | null
-          currency: string | null
-          customer: string | null
-          description: string | null
-          id: string | null
-          invoice: string | null
-          payment_intent: string | null
-          status: string | null
-        }
-        Insert: {
-          amount?: number | null
-          attrs?: Json | null
-          created?: string | null
-          currency?: string | null
-          customer?: string | null
-          description?: string | null
-          id?: string | null
-          invoice?: string | null
-          payment_intent?: string | null
-          status?: string | null
-        }
-        Update: {
-          amount?: number | null
-          attrs?: Json | null
-          created?: string | null
-          currency?: string | null
-          customer?: string | null
-          description?: string | null
-          id?: string | null
-          invoice?: string | null
-          payment_intent?: string | null
-          status?: string | null
         }
         Relationships: []
       }
@@ -1292,6 +1414,69 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_audit_log: {
+        Row: {
+          audit_date: string | null
+          audit_type: string
+          audited_amount_usd: number | null
+          auditor_id: string | null
+          compliance_score: number | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          findings: Json | null
+          id: string
+          recommendations: Json | null
+          resolution_notes: string | null
+          resolution_status: string | null
+          resolved_at: string | null
+          risk_level: string | null
+          status: string
+          variance_amount_usd: number | null
+          variance_percentage: number | null
+        }
+        Insert: {
+          audit_date?: string | null
+          audit_type: string
+          audited_amount_usd?: number | null
+          auditor_id?: string | null
+          compliance_score?: number | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          findings?: Json | null
+          id?: string
+          recommendations?: Json | null
+          resolution_notes?: string | null
+          resolution_status?: string | null
+          resolved_at?: string | null
+          risk_level?: string | null
+          status: string
+          variance_amount_usd?: number | null
+          variance_percentage?: number | null
+        }
+        Update: {
+          audit_date?: string | null
+          audit_type?: string
+          audited_amount_usd?: number | null
+          auditor_id?: string | null
+          compliance_score?: number | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          findings?: Json | null
+          id?: string
+          recommendations?: Json | null
+          resolution_notes?: string | null
+          resolution_status?: string | null
+          resolved_at?: string | null
+          risk_level?: string | null
+          status?: string
+          variance_amount_usd?: number | null
+          variance_percentage?: number | null
+        }
+        Relationships: []
+      }
       compliance_checks: {
         Row: {
           check_date: string
@@ -1331,43 +1516,38 @@ export type Database = {
         }
         Relationships: []
       }
-      compliance_logs: {
+      connection_monitoring: {
         Row: {
           check_type: string
-          details: Json | null
+          created_at: string | null
+          error_message: string | null
           id: string
-          order_id: string | null
-          performed_at: string | null
-          score: number | null
+          metadata: Json | null
+          provider: string
+          response_time_ms: number | null
           status: string
         }
         Insert: {
           check_type: string
-          details?: Json | null
+          created_at?: string | null
+          error_message?: string | null
           id?: string
-          order_id?: string | null
-          performed_at?: string | null
-          score?: number | null
+          metadata?: Json | null
+          provider: string
+          response_time_ms?: number | null
           status: string
         }
         Update: {
           check_type?: string
-          details?: Json | null
+          created_at?: string | null
+          error_message?: string | null
           id?: string
-          order_id?: string | null
-          performed_at?: string | null
-          score?: number | null
+          metadata?: Json | null
+          provider?: string
+          response_time_ms?: number | null
           status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       consolidated_amounts: {
         Row: {
@@ -1423,25 +1603,22 @@ export type Database = {
       cron_execution_logs: {
         Row: {
           created_at: string | null
-          execution_time: string | null
           function_name: string
-          id: number
+          id: string
           result: Json | null
           success: boolean
         }
         Insert: {
           created_at?: string | null
-          execution_time?: string | null
           function_name: string
-          id?: never
+          id?: string
           result?: Json | null
           success?: boolean
         }
         Update: {
           created_at?: string | null
-          execution_time?: string | null
           function_name?: string
-          id?: never
+          id?: string
           result?: Json | null
           success?: boolean
         }
@@ -1558,6 +1735,42 @@ export type Database = {
           },
         ]
       }
+      emergency_events: {
+        Row: {
+          created_at: string | null
+          details: Json
+          event_type: string
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json
+          event_type: string
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json
+          event_type?: string
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       exchange_rates: {
         Row: {
           id: number
@@ -1597,21 +1810,222 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_analytics: {
+        Row: {
+          active_revenue_streams: number | null
+          average_transfer_amount_usd: number | null
+          bank_fees_usd: number | null
+          cost_per_acquisition_usd: number | null
+          created_at: string | null
+          failed_transfers: number | null
+          geographic_breakdown: Json | null
+          gross_revenue_usd: number | null
+          id: string
+          metric_date: string
+          net_revenue_usd: number | null
+          one_time_revenue_usd: number | null
+          optimization_impact: Json | null
+          period_type: string
+          profit_margin_percentage: number | null
+          recurring_revenue_usd: number | null
+          revenue_by_category: Json | null
+          revenue_by_source: Json | null
+          roi_percentage: number | null
+          stripe_fees_usd: number | null
+          successful_transfers: number | null
+          total_fees_usd: number | null
+          total_transfers_usd: number | null
+          transaction_count: number | null
+          unique_users: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_revenue_streams?: number | null
+          average_transfer_amount_usd?: number | null
+          bank_fees_usd?: number | null
+          cost_per_acquisition_usd?: number | null
+          created_at?: string | null
+          failed_transfers?: number | null
+          geographic_breakdown?: Json | null
+          gross_revenue_usd?: number | null
+          id?: string
+          metric_date: string
+          net_revenue_usd?: number | null
+          one_time_revenue_usd?: number | null
+          optimization_impact?: Json | null
+          period_type: string
+          profit_margin_percentage?: number | null
+          recurring_revenue_usd?: number | null
+          revenue_by_category?: Json | null
+          revenue_by_source?: Json | null
+          roi_percentage?: number | null
+          stripe_fees_usd?: number | null
+          successful_transfers?: number | null
+          total_fees_usd?: number | null
+          total_transfers_usd?: number | null
+          transaction_count?: number | null
+          unique_users?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_revenue_streams?: number | null
+          average_transfer_amount_usd?: number | null
+          bank_fees_usd?: number | null
+          cost_per_acquisition_usd?: number | null
+          created_at?: string | null
+          failed_transfers?: number | null
+          geographic_breakdown?: Json | null
+          gross_revenue_usd?: number | null
+          id?: string
+          metric_date?: string
+          net_revenue_usd?: number | null
+          one_time_revenue_usd?: number | null
+          optimization_impact?: Json | null
+          period_type?: string
+          profit_margin_percentage?: number | null
+          recurring_revenue_usd?: number | null
+          revenue_by_category?: Json | null
+          revenue_by_source?: Json | null
+          roi_percentage?: number | null
+          stripe_fees_usd?: number | null
+          successful_transfers?: number | null
+          total_fees_usd?: number | null
+          total_transfers_usd?: number | null
+          transaction_count?: number | null
+          unique_users?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       financial_balances: {
         Row: {
           amount: number
           currency: string | null
           id: number
+          user_id: string | null
         }
         Insert: {
           amount: number
           currency?: string | null
           id?: never
+          user_id?: string | null
         }
         Update: {
           amount?: number
           currency?: string | null
           id?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      financial_dashboard_cache: {
+        Row: {
+          cache_key: string
+          cached_data: Json
+          created_at: string | null
+          data_hash: string | null
+          data_type: string
+          expires_at: string
+          id: string
+          is_valid: boolean | null
+          last_updated: string | null
+          refresh_frequency_minutes: number | null
+          validation_errors: Json | null
+        }
+        Insert: {
+          cache_key: string
+          cached_data: Json
+          created_at?: string | null
+          data_hash?: string | null
+          data_type: string
+          expires_at: string
+          id?: string
+          is_valid?: boolean | null
+          last_updated?: string | null
+          refresh_frequency_minutes?: number | null
+          validation_errors?: Json | null
+        }
+        Update: {
+          cache_key?: string
+          cached_data?: Json
+          created_at?: string | null
+          data_hash?: string | null
+          data_type?: string
+          expires_at?: string
+          id?: string
+          is_valid?: boolean | null
+          last_updated?: string | null
+          refresh_frequency_minutes?: number | null
+          validation_errors?: Json | null
+        }
+        Relationships: []
+      }
+      financial_failsafe_config: {
+        Row: {
+          config: Json
+          created_at: string | null
+          health_status: string | null
+          id: number
+          last_health_check: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          health_status?: string | null
+          id?: number
+          last_health_check?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          health_status?: string | null
+          id?: number
+          last_health_check?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      financial_statements: {
+        Row: {
+          created_at: string
+          id: string
+          net_income: number
+          period_end: string
+          period_start: string
+          statement_data: Json
+          statement_type: string
+          total_expenses: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          net_income?: number
+          period_end: string
+          period_start: string
+          statement_data?: Json
+          statement_type: string
+          total_expenses?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          net_income?: number
+          period_end?: string
+          period_start?: string
+          statement_data?: Json
+          statement_type?: string
+          total_expenses?: number
+          total_revenue?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1912,6 +2326,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      manual_review_queue: {
+        Row: {
+          amount: number
+          assigned_to: string | null
+          created_at: string | null
+          details: Json
+          id: string
+          priority: string
+          processed_at: string | null
+          processing_notes: string | null
+          status: string
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          assigned_to?: string | null
+          created_at?: string | null
+          details?: Json
+          id?: string
+          priority?: string
+          processed_at?: string | null
+          processing_notes?: string | null
+          status?: string
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          assigned_to?: string | null
+          created_at?: string | null
+          details?: Json
+          id?: string
+          priority?: string
+          processed_at?: string | null
+          processing_notes?: string | null
+          status?: string
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       market_offers: {
         Row: {
@@ -2456,6 +2915,197 @@ export type Database = {
         }
         Relationships: []
       }
+      profit_transfers: {
+        Row: {
+          created_at: string | null
+          destination: string
+          error_message: string | null
+          id: string
+          net_amount: number
+          processed_at: string | null
+          status: string | null
+          stripe_transfer_id: string | null
+          total_amount: number
+          transfer_fee: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          destination: string
+          error_message?: string | null
+          id?: string
+          net_amount: number
+          processed_at?: string | null
+          status?: string | null
+          stripe_transfer_id?: string | null
+          total_amount: number
+          transfer_fee?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          destination?: string
+          error_message?: string | null
+          id?: string
+          net_amount?: number
+          processed_at?: string | null
+          status?: string | null
+          stripe_transfer_id?: string | null
+          total_amount?: number
+          transfer_fee?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profits: {
+        Row: {
+          auction_id: string | null
+          created_at: string | null
+          id: string
+          net_profit: number
+          purchase_price: number
+          sale_platform: string | null
+          sale_price: number
+          sold_at: string | null
+          stripe_transfer_id: string | null
+          total_fees: number | null
+          transfer_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auction_id?: string | null
+          created_at?: string | null
+          id?: string
+          net_profit: number
+          purchase_price: number
+          sale_platform?: string | null
+          sale_price: number
+          sold_at?: string | null
+          stripe_transfer_id?: string | null
+          total_fees?: number | null
+          transfer_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auction_id?: string | null
+          created_at?: string | null
+          id?: string
+          net_profit?: number
+          purchase_price?: number
+          sale_platform?: string | null
+          sale_price?: number
+          sold_at?: string | null
+          stripe_transfer_id?: string | null
+          total_fees?: number | null
+          transfer_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profits_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      real_bank_integrations: {
+        Row: {
+          api_endpoint: string
+          api_version: string | null
+          avg_response_time_ms: number | null
+          bank_name: string
+          compliance_level: string | null
+          created_at: string | null
+          daily_transaction_limit: number | null
+          daily_transactions_processed: number | null
+          id: string
+          last_health_check: string | null
+          security_config: Json | null
+          status: string
+          success_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_endpoint: string
+          api_version?: string | null
+          avg_response_time_ms?: number | null
+          bank_name: string
+          compliance_level?: string | null
+          created_at?: string | null
+          daily_transaction_limit?: number | null
+          daily_transactions_processed?: number | null
+          id?: string
+          last_health_check?: string | null
+          security_config?: Json | null
+          status?: string
+          success_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_endpoint?: string
+          api_version?: string | null
+          avg_response_time_ms?: number | null
+          bank_name?: string
+          compliance_level?: string | null
+          created_at?: string | null
+          daily_transaction_limit?: number | null
+          daily_transactions_processed?: number | null
+          id?: string
+          last_health_check?: string | null
+          security_config?: Json | null
+          status?: string
+          success_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      real_cashout_requests: {
+        Row: {
+          amount_coins: number
+          amount_usd: number
+          created_at: string | null
+          error_message: string | null
+          id: string
+          payment_details: Json
+          payment_method: string
+          processed_at: string | null
+          status: string
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_coins: number
+          amount_usd: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payment_details: Json
+          payment_method: string
+          processed_at?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_coins?: number
+          amount_usd?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payment_details?: Json
+          payment_method?: string
+          processed_at?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       repository_revenue: {
         Row: {
           api_calls_count: number | null
@@ -2697,6 +3347,45 @@ export type Database = {
           total_contract_value?: number
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      revenue_dashboard_cache: {
+        Row: {
+          active_sources: number | null
+          active_workers: number | null
+          avg_daily_revenue: number | null
+          current_balance: number | null
+          id: number
+          last_updated_at: string | null
+          pending_transfer_count: number | null
+          pending_transfers: number | null
+          today_revenue: number | null
+          today_transfers: number | null
+        }
+        Insert: {
+          active_sources?: number | null
+          active_workers?: number | null
+          avg_daily_revenue?: number | null
+          current_balance?: number | null
+          id?: number
+          last_updated_at?: string | null
+          pending_transfer_count?: number | null
+          pending_transfers?: number | null
+          today_revenue?: number | null
+          today_transfers?: number | null
+        }
+        Update: {
+          active_sources?: number | null
+          active_workers?: number | null
+          avg_daily_revenue?: number | null
+          current_balance?: number | null
+          id?: number
+          last_updated_at?: string | null
+          pending_transfer_count?: number | null
+          pending_transfers?: number | null
+          today_revenue?: number | null
+          today_transfers?: number | null
         }
         Relationships: []
       }
@@ -2977,6 +3666,96 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      revenue_recognition_schedule: {
+        Row: {
+          account_receivable_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          id: string
+          journal_id: string | null
+          metadata: Json | null
+          recognition_date: string
+          recognition_method: string
+          recognized_amount_usd: number
+          recognized_at: string | null
+          revenue_account_id: string | null
+          revenue_stream_id: string | null
+          schedule_type: string | null
+          status: string | null
+          unearned_amount_usd: number | null
+        }
+        Insert: {
+          account_receivable_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          journal_id?: string | null
+          metadata?: Json | null
+          recognition_date: string
+          recognition_method: string
+          recognized_amount_usd: number
+          recognized_at?: string | null
+          revenue_account_id?: string | null
+          revenue_stream_id?: string | null
+          schedule_type?: string | null
+          status?: string | null
+          unearned_amount_usd?: number | null
+        }
+        Update: {
+          account_receivable_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          journal_id?: string | null
+          metadata?: Json | null
+          recognition_date?: string
+          recognition_method?: string
+          recognized_amount_usd?: number
+          recognized_at?: string | null
+          revenue_account_id?: string | null
+          revenue_stream_id?: string | null
+          schedule_type?: string | null
+          status?: string | null
+          unearned_amount_usd?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_recognition_schedule_account_receivable_id_fkey"
+            columns: ["account_receivable_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_schedule_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_schedule_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_journals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_schedule_revenue_account_id_fkey"
+            columns: ["revenue_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_schedule_revenue_stream_id_fkey"
+            columns: ["revenue_stream_id"]
+            isOneToOne: false
+            referencedRelation: "autonomous_revenue_streams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       revenue_schedules: {
         Row: {
@@ -3481,29 +4260,41 @@ export type Database = {
       }
       stripe_configuration: {
         Row: {
-          account_id: string | null
+          account_id: string
           api_key: string
+          auto_transfer_enabled: boolean | null
           created_at: string | null
+          environment: string
           id: string
-          is_live: boolean | null
+          minimum_transfer_amount: number | null
+          status: string | null
+          transfer_frequency: string | null
           updated_at: string | null
           webhook_secret: string | null
         }
         Insert: {
-          account_id?: string | null
+          account_id: string
           api_key: string
+          auto_transfer_enabled?: boolean | null
           created_at?: string | null
+          environment?: string
           id?: string
-          is_live?: boolean | null
+          minimum_transfer_amount?: number | null
+          status?: string | null
+          transfer_frequency?: string | null
           updated_at?: string | null
           webhook_secret?: string | null
         }
         Update: {
-          account_id?: string | null
+          account_id?: string
           api_key?: string
+          auto_transfer_enabled?: boolean | null
           created_at?: string | null
+          environment?: string
           id?: string
-          is_live?: boolean | null
+          minimum_transfer_amount?: number | null
+          status?: string | null
+          transfer_frequency?: string | null
           updated_at?: string | null
           webhook_secret?: string | null
         }
@@ -3998,6 +4789,48 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_audit_log: {
+        Row: {
+          amount: number
+          audit_details: Json
+          audited_at: string | null
+          compliance_status: string
+          created_at: string
+          id: string
+          status: string
+          stripe_transaction_id: string | null
+          transaction_id: string
+          transaction_type: string
+          user_email: string | null
+        }
+        Insert: {
+          amount: number
+          audit_details?: Json
+          audited_at?: string | null
+          compliance_status?: string
+          created_at?: string
+          id?: string
+          status: string
+          stripe_transaction_id?: string | null
+          transaction_id: string
+          transaction_type: string
+          user_email?: string | null
+        }
+        Update: {
+          amount?: number
+          audit_details?: Json
+          audited_at?: string | null
+          compliance_status?: string
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_transaction_id?: string | null
+          transaction_id?: string
+          transaction_type?: string
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       transaction_logs: {
         Row: {
           amount: number
@@ -4225,10 +5058,20 @@ export type Database = {
           created_at: string | null
           currency: string
           current_balance: number
+          effective_end_date: string | null
+          effective_start_date: string | null
+          general_ledger_account: string | null
+          gl_account_number: string | null
           id: string
+          invoice_metadata_key: string | null
+          invoice_metadata_value: string | null
           is_active: boolean
           metadata: Json | null
           pending_balance: number
+          product_id: number | null
+          shipping_region_country: string | null
+          shipping_region_state: string | null
+          stripe_account: string | null
           stripe_account_id: string | null
           updated_at: string | null
         }
@@ -4240,10 +5083,20 @@ export type Database = {
           created_at?: string | null
           currency?: string
           current_balance?: number
+          effective_end_date?: string | null
+          effective_start_date?: string | null
+          general_ledger_account?: string | null
+          gl_account_number?: string | null
           id?: string
+          invoice_metadata_key?: string | null
+          invoice_metadata_value?: string | null
           is_active?: boolean
           metadata?: Json | null
           pending_balance?: number
+          product_id?: number | null
+          shipping_region_country?: string | null
+          shipping_region_state?: string | null
+          stripe_account?: string | null
           stripe_account_id?: string | null
           updated_at?: string | null
         }
@@ -4255,10 +5108,20 @@ export type Database = {
           created_at?: string | null
           currency?: string
           current_balance?: number
+          effective_end_date?: string | null
+          effective_start_date?: string | null
+          general_ledger_account?: string | null
+          gl_account_number?: string | null
           id?: string
+          invoice_metadata_key?: string | null
+          invoice_metadata_value?: string | null
           is_active?: boolean
           metadata?: Json | null
           pending_balance?: number
+          product_id?: number | null
+          shipping_region_country?: string | null
+          shipping_region_state?: string | null
+          stripe_account?: string | null
           stripe_account_id?: string | null
           updated_at?: string | null
         }
@@ -4494,6 +5357,126 @@ export type Database = {
         }
         Relationships: []
       }
+      usd_audit_trail: {
+        Row: {
+          audit_data: Json
+          audit_timestamp: string | null
+          audit_type: string
+          auditor_id: string | null
+          compliance_notes: string | null
+          id: string
+          risk_score: number | null
+          transaction_id: string
+        }
+        Insert: {
+          audit_data: Json
+          audit_timestamp?: string | null
+          audit_type: string
+          auditor_id?: string | null
+          compliance_notes?: string | null
+          id?: string
+          risk_score?: number | null
+          transaction_id: string
+        }
+        Update: {
+          audit_data?: Json
+          audit_timestamp?: string | null
+          audit_type?: string
+          auditor_id?: string | null
+          compliance_notes?: string | null
+          id?: string
+          risk_score?: number | null
+          transaction_id?: string
+        }
+        Relationships: []
+      }
+      usd_balance_real_time: {
+        Row: {
+          amount_usd: number
+          balance_type: string
+          id: string
+          last_updated: string | null
+          last_verification: string | null
+          metadata: Json | null
+          source_system: string
+          verification_status: string | null
+        }
+        Insert: {
+          amount_usd?: number
+          balance_type: string
+          id?: string
+          last_updated?: string | null
+          last_verification?: string | null
+          metadata?: Json | null
+          source_system: string
+          verification_status?: string | null
+        }
+        Update: {
+          amount_usd?: number
+          balance_type?: string
+          id?: string
+          last_updated?: string | null
+          last_verification?: string | null
+          metadata?: Json | null
+          source_system?: string
+          verification_status?: string | null
+        }
+        Relationships: []
+      }
+      usd_payment_verification: {
+        Row: {
+          amount: number
+          bank_transfer_id: string | null
+          compliance_status: string | null
+          created_at: string | null
+          currency: string
+          id: string
+          payment_method: string
+          real_money_confirmed: boolean | null
+          status: string
+          stripe_payment_intent_id: string | null
+          transaction_id: string
+          updated_at: string | null
+          user_email: string
+          verification_checks: Json | null
+          verification_timestamp: string | null
+        }
+        Insert: {
+          amount: number
+          bank_transfer_id?: string | null
+          compliance_status?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_method: string
+          real_money_confirmed?: boolean | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_id: string
+          updated_at?: string | null
+          user_email: string
+          verification_checks?: Json | null
+          verification_timestamp?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_transfer_id?: string | null
+          compliance_status?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_method?: string
+          real_money_confirmed?: boolean | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_id?: string
+          updated_at?: string | null
+          user_email?: string
+          verification_checks?: Json | null
+          verification_timestamp?: string | null
+        }
+        Relationships: []
+      }
       usd_transactions: {
         Row: {
           amount: number
@@ -4536,12 +5519,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_earnings: {
+        Row: {
+          ad_network: string | null
+          amount_usd: number
+          created_at: string | null
+          earning_type: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          ad_network?: string | null
+          amount_usd: number
+          created_at?: string | null
+          earning_type: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          ad_network?: string | null
+          amount_usd?: number
+          created_at?: string | null
+          earning_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_sessions: {
         Row: {
           created_at: string | null
           expires_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           last_activity: string | null
           session_token: string
           user_agent: string | null
@@ -4551,7 +5564,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_activity?: string | null
           session_token: string
           user_agent?: string | null
@@ -4561,7 +5574,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_activity?: string | null
           session_token?: string
           user_agent?: string | null
@@ -4841,22 +5854,6 @@ export type Database = {
       }
     }
     Views: {
-      autonomous_revenue_dashboard: {
-        Row: {
-          active_sources: number | null
-          active_workers: number | null
-          dashboard_updated_at: string | null
-          failed_tasks_24h: number | null
-          pending_tasks: number | null
-          processing_tasks: number | null
-          revenue_24h: number | null
-          revenue_7d: number | null
-          success_rate_24h: number | null
-          tasks_per_hour_per_worker: number | null
-          total_revenue: number | null
-        }
-        Relationships: []
-      }
       balance_movements: {
         Row: {
           amount: number | null
@@ -4914,21 +5911,6 @@ export type Database = {
         }
         Relationships: []
       }
-      revenue_dashboard_summary: {
-        Row: {
-          active_streams: number | null
-          completed_transfer_amount: number | null
-          completed_transfers: number | null
-          pending_transfer_amount: number | null
-          pending_transfers: number | null
-          revenue_24h: number | null
-          total_revenue_generated: number | null
-          total_revenue_transferred: number | null
-          total_transactions: number | null
-          transactions_24h: number | null
-        }
-        Relationships: []
-      }
       storage_balance_by_location: {
         Row: {
           current_balance: number | null
@@ -4982,87 +5964,83 @@ export type Database = {
       }
     }
     Functions: {
-      activate_storage_monetization: {
-        Args:
-          | Record<PropertyKey, never>
-          | { initial_balance: number }
-          | { initial_balance?: number }
-        Returns: Json
-      }
-      add_funds_to_balance: {
-        Args: { amount: number }
-        Returns: Json
-      }
+      activate_storage_monetization:
+        | { Args: never; Returns: Json }
+        | {
+            Args: { initial_balance: number }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.activate_storage_monetization(initial_balance => int4), public.activate_storage_monetization(initial_balance => numeric). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { initial_balance?: number }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.activate_storage_monetization(initial_balance => int4), public.activate_storage_monetization(initial_balance => numeric). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+      add_funds_to_balance: { Args: { amount: number }; Returns: Json }
       adjust_source_pricing: {
-        Args: { p_source_name: string; p_adjustment_factor: number }
+        Args: { p_adjustment_factor: number; p_source_name: string }
         Returns: boolean
       }
-      allocate_agent_budget: {
-        Args: { agent_id: string }
-        Returns: Json
-      }
+      allocate_agent_budget: { Args: { agent_id: string }; Returns: Json }
       allocate_transaction_price: {
-        Args: { p_contract_id: string; p_allocation_method?: string }
+        Args: { p_allocation_method?: string; p_contract_id: string }
         Returns: Json
       }
-      begin_transaction: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      begin_transaction: { Args: never; Returns: Json }
       calculate_daily_revenue_metrics: {
         Args: { p_date?: string }
         Returns: Json
       }
-      calculate_storage_revenue: {
-        Args: { p_user_id: string; p_date?: string }
+      calculate_real_time_usd_balance: {
+        Args: never
         Returns: {
-          user_id: string
+          available_usd: number
+          last_updated: string
+          pending_usd: number
+          source_system: string
+          total_usd: number
+        }[]
+      }
+      calculate_storage_revenue: {
+        Args: { p_date?: string; p_user_id: string }
+        Returns: {
           bytes_used: number
-          gb_used: number
-          tier_name: string
-          price_per_gb: number
           calculated_revenue: number
           currency: string
+          gb_used: number
+          price_per_gb: number
+          tier_name: string
+          user_id: string
         }[]
       }
       calculate_transfer_amount: {
         Args: { p_source_streams: Json }
         Returns: number
       }
-      check_balance: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      check_edge_function_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      check_balance: { Args: never; Returns: Json }
+      check_edge_function_status: { Args: never; Returns: Json }
       check_storage_balance_location: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          location: string
           amount: number
           last_transfer_date: string
+          location: string
           transfer_reference: string
         }[]
       }
-      check_stripe_integration_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      check_verification_code_status: {
-        Args: { code: string }
-        Returns: Json
-      }
+      check_stripe_integration_status: { Args: never; Returns: Json }
+      check_verification_code_status: { Args: { code: string }; Returns: Json }
       claim_revenue_task: {
         Args: { p_worker_id: string; p_worker_type: string }
         Returns: Json
       }
       claim_revenue_tasks: {
         Args: {
+          p_batch_size?: number
           p_worker_id: string
           p_worker_type: string
-          p_batch_size?: number
         }
         Returns: {
           completed_at: string | null
@@ -5079,80 +6057,77 @@ export type Database = {
           task_type: string
           worker_id: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "autonomous_revenue_task_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
-      commit_transaction: {
-        Args: { session_id: string }
-        Returns: undefined
-      }
-      complete_revenue_recognition_and_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      commit_transaction: { Args: { session_id: string }; Returns: undefined }
+      complete_revenue_recognition_and_transfer: { Args: never; Returns: Json }
       complete_revenue_task: {
         Args: {
-          p_worker_id: string
-          p_task_id: string
-          p_success: boolean
-          p_result?: Json
           p_error_message?: string
+          p_result?: Json
+          p_success: boolean
+          p_task_id: string
+          p_worker_id: string
         }
         Returns: Json
       }
       confirm_autonomous_revenue_transfer: {
-        Args: { p_transfer_id: string; p_stripe_transfer_id: string }
+        Args: { p_stripe_transfer_id: string; p_transfer_id: string }
         Returns: {
-          status: string
           amount: number
           error_message: string
+          status: string
         }[]
       }
-      consolidate_all_revenue: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      consolidate_all_revenue: { Args: never; Returns: string }
       consolidate_all_revenues: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          total_consolidated_amount: number
           sources_processed: string[]
+          total_consolidated_amount: number
         }[]
       }
       consolidate_all_revenues_with_storage: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          total_consolidated_amount: number
           sources_processed: string[]
+          total_consolidated_amount: number
         }[]
       }
-      consolidate_and_send_to_stripe: {
-        Args:
-          | {
+      consolidate_and_send_to_stripe:
+        | {
+            Args: {
               p_master_user_id: string
-              p_period_start?: string
               p_period_end?: string
+              p_period_start?: string
             }
-          | { p_period_start?: string; p_period_end?: string }
-        Returns: Json
-      }
+            Returns: Json
+          }
+        | {
+            Args: { p_period_end?: string; p_period_start?: string }
+            Returns: Json
+          }
       consolidate_failed_transactions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          total_failed_amount: number
           failed_sources: string[]
+          total_failed_amount: number
         }[]
       }
-      consolidate_usd_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      consolidate_usd_balances: { Args: never; Returns: Json }
       create_revenue_recognition_entries: {
         Args: {
-          p_transaction_id: string
           p_amount: number
-          p_revenue_account_id?: string
           p_cash_account_id?: string
           p_description?: string
           p_reference?: string
+          p_revenue_account_id?: string
+          p_transaction_id: string
         }
         Returns: string
       }
@@ -5165,120 +6140,125 @@ export type Database = {
         Returns: Json
       }
       create_secure_transfer: {
-        Args: { p_amount: number; p_destination: string; p_currency?: string }
+        Args: { p_amount: number; p_currency?: string; p_destination: string }
         Returns: string
       }
-      create_storage_billing_cron: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      create_storage_billing_cron: { Args: never; Returns: undefined }
       create_transfer_batch: {
         Args: { p_batch_size?: number; p_max_amount?: number }
         Returns: string
       }
-      daily_revenue_consolidation: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      daily_revenue_consolidation: { Args: never; Returns: Json }
       daily_volume: {
         Args: { date_param?: string }
         Returns: {
-          total_orders: number
-          total_volume_usd: number
           completed_orders: number
           completed_volume_usd: number
           total_fees: number
+          total_orders: number
+          total_volume_usd: number
         }[]
       }
       decrement_worker_count: {
         Args: { p_worker_type: string }
         Returns: boolean
       }
-      execute_resend_transfers: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      execute_resend_transfers: { Args: never; Returns: string }
       execute_verified_stripe_transfer: {
         Args: {
-          verification_code: string
           amount: number
           force_recognition?: boolean
+          verification_code: string
         }
         Returns: Json
       }
-      expire_old_orders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_autonomous_revenue: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      expire_old_orders: { Args: never; Returns: undefined }
+      generate_autonomous_revenue: { Args: never; Returns: undefined }
       generate_balance_sheet_export: {
-        Args: { p_start_date?: string; p_end_date?: string }
+        Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
-          transaction_date: string
           account_code: string
           account_name: string
-          debit_amount: number
+          balance_after: number
           credit_amount: number
+          debit_amount: number
           description: string
           reference: string
-          balance_after: number
+          transaction_date: string
         }[]
       }
-      generate_new_campaigns: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+      generate_financial_analytics: {
+        Args: {
+          p_end_date?: string
+          p_period_type?: string
+          p_start_date?: string
+        }
+        Returns: Json
       }
-      generate_revenue_for_active_streams: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      generate_new_campaigns: { Args: never; Returns: undefined }
+      generate_revenue_for_active_streams: { Args: never; Returns: undefined }
       generate_revenue_for_stream: {
         Args: { p_stream_id: string }
         Returns: number
       }
-      generate_revenue_report: {
-        Args:
-          | { p_start_date: string; p_end_date: string }
-          | { p_start_date: string; p_end_date: string; p_report_type?: string }
-        Returns: Json
-      }
-      generate_revenue_tasks: {
-        Args: { p_batch_size?: number }
-        Returns: Json
-      }
+      generate_revenue_report:
+        | {
+            Args: {
+              p_end_date: string
+              p_report_type?: string
+              p_start_date: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { p_end_date: string; p_start_date: string }
+            Returns: {
+              average_transaction: number
+              growth_rate: number
+              stream_id: string
+              stream_name: string
+              stream_type: string
+              total_revenue: number
+              transaction_count: number
+            }[]
+          }
+      generate_revenue_tasks: { Args: { p_batch_size?: number }; Returns: Json }
       generate_test_revenue: {
-        Args: { p_user_id: string; p_amount: number; p_count?: number }
+        Args: { p_amount: number; p_count?: number; p_user_id: string }
         Returns: Json
       }
       generate_transfer_verification_code: {
         Args: { transfer_amount: number }
         Returns: string
       }
-      get_autonomous_revenue_stats: {
-        Args: Record<PropertyKey, never> | { p_time_period?: string }
+      get_application_balance: {
+        Args: never
         Returns: {
-          total_revenue: number
-          active_streams: number
-          inactive_streams: number
-          top_strategy: string
-          top_strategy_revenue: number
-          avg_transaction_amount: number
-          total_transactions: number
+          balance_amount: number
+          failed_transaction_amount: number
+          id: number
+          last_updated_at: string
+          pending_transfers: number
         }[]
       }
-      get_available_balance: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_balance_summary: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_autonomous_revenue_stats:
+        | {
+            Args: never
+            Returns: {
+              active_streams: number
+              avg_transaction_amount: number
+              inactive_streams: number
+              top_strategy: string
+              top_strategy_revenue: number
+              total_revenue: number
+              total_transactions: number
+            }[]
+          }
+        | { Args: { p_time_period?: string }; Returns: Json }
+      get_available_balance: { Args: never; Returns: number }
+      get_balance_summary: { Args: never; Returns: Json }
       get_balance_tracking: {
-        Args: { start_date?: string; end_date?: string }
+        Args: { end_date?: string; start_date?: string }
         Returns: {
           current_application_balance: number
           current_stripe_balance: number
@@ -5286,71 +6266,63 @@ export type Database = {
         }[]
       }
       get_failed_transfers_for_fix: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          transfer_id: string
-          stripe_transfer_id: string
           amount: number
+          created_at: string
           currency: string
           description: string
           destination: string
           error_code: string
           error_message: string
           metadata: Json
-          created_at: string
           retry_count: number
+          stripe_transfer_id: string
+          transfer_id: string
         }[]
       }
       get_revenue_by_day: {
-        Args: { start_date: string; end_date: string }
+        Args: { end_date: string; start_date: string }
         Returns: {
-          date: string
           amount: number
+          date: string
         }[]
       }
-      get_revenue_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_revenue_stats: { Args: never; Returns: Json }
       get_revenue_summary_by_strategy: {
-        Args: { p_start_date?: string; p_end_date?: string }
+        Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
-          strategy: string
-          transaction_count: number
-          total_amount: number
           avg_amount: number
-          transferred_count: number
-          transferred_amount: number
-          pending_transfer_count: number
           pending_transfer_amount: number
+          pending_transfer_count: number
+          strategy: string
+          total_amount: number
+          transaction_count: number
+          transferred_amount: number
+          transferred_count: number
         }[]
       }
-      get_storage_usage_and_balance: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_storage_usage_and_balance: { Args: never; Returns: Json }
       get_total_revenue: {
-        Args: { start_date: string; end_date: string }
+        Args: { end_date: string; start_date: string }
         Returns: {
           total_revenue: number
         }[]
       }
-      get_transfer_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_transfer_stats: { Args: never; Returns: Json }
       get_treasury_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          total_balance: number
           available_balance: number
           pending_balance: number
-          total_transfers_today: number
           profit_optimization_score: number
+          total_balance: number
+          total_transfers_today: number
         }[]
       }
+      get_user_cashout_balance: { Args: { p_user_id: string }; Returns: number }
       get_valid_stripe_transfer_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           status_value: string
         }[]
@@ -5359,10 +6331,7 @@ export type Database = {
         Args: { p_worker_type: string }
         Returns: boolean
       }
-      initialize_autonomous_revenue_system: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      initialize_autonomous_revenue_system: { Args: never; Returns: Json }
       initiate_balance_transfer: {
         Args: { transfer_amount: number }
         Returns: Json
@@ -5375,56 +6344,50 @@ export type Database = {
         }
         Returns: string
       }
-      inspect_stripe_transfers_table: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      launch_new_agents: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+      inspect_stripe_transfers_table: { Args: never; Returns: string }
+      launch_new_agents: { Args: never; Returns: undefined }
+      list_tables: {
+        Args: never
+        Returns: {
+          table_name: string
+        }[]
       }
       log_revenue_transfer: {
         Args: {
-          p_source_user_id: string
           p_amount: number
-          p_source: string
           p_description?: string
           p_metadata?: Json
+          p_source: string
+          p_source_user_id: string
         }
         Returns: string
       }
       log_transaction: {
         Args: {
-          p_user_id: string
           p_amount: number
-          p_status: string
           p_description: string
+          p_status: string
+          p_user_id: string
         }
         Returns: undefined
       }
       mark_transfer_corrected: {
         Args: {
-          original_id: string
-          new_stripe_id: string
           corrected_destination: string
+          new_stripe_id: string
+          original_id: string
         }
         Returns: boolean
       }
       monetize_application_balance: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          user_id: string
           new_stripe_balance: number
+          user_id: string
         }[]
       }
-      monitor_revenue_system: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      optimize_autonomous_revenue_streams: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      monitor_revenue_system: { Args: never; Returns: Json }
+      optimize_autonomous_revenue_streams: { Args: never; Returns: undefined }
       optimize_campaign_bidding: {
         Args: { campaign_id: string; max_adjustment_percent?: number }
         Returns: Json
@@ -5432,164 +6395,107 @@ export type Database = {
       optimize_campaign_revenue: {
         Args: {
           p_campaign_id: string
-          p_optimization_target?: string
           p_lookback_days?: number
+          p_optimization_target?: string
         }
         Returns: Json
       }
-      optimize_campaigns: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      optimize_revenue_system: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      optimize_revenue_transfers: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      optimize_underperforming_streams: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      parallel_revenue_processor: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      process_application_balance_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      process_autonomous_revenue_transfers: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      process_cash_out_request: {
-        Args: { request_id: string }
-        Returns: Json
-      }
-      process_failed_transfers_and_payouts: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      process_revenue_recognition_and_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      optimize_campaigns: { Args: never; Returns: undefined }
+      optimize_revenue_system: { Args: never; Returns: Json }
+      optimize_revenue_transfers: { Args: never; Returns: Json }
+      optimize_underperforming_streams: { Args: never; Returns: undefined }
+      parallel_revenue_processor: { Args: never; Returns: Json }
+      process_application_balance_transfer: { Args: never; Returns: Json }
+      process_autonomous_revenue_transfers: { Args: never; Returns: undefined }
+      process_cash_out_request: { Args: { request_id: string }; Returns: Json }
+      process_failed_transfers_and_payouts: { Args: never; Returns: Json }
+      process_revenue_recognition_and_transfer: { Args: never; Returns: Json }
       process_revenue_transfer_with_recognition: {
         Args: {
           p_batch_size?: number
-          p_start_date?: string
           p_end_date?: string
+          p_start_date?: string
         }
         Returns: Json
       }
-      process_storage_billing: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      reconcile_balance_transfers: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      process_storage_billing: { Args: never; Returns: Json }
+      reconcile_balance_transfers: { Args: never; Returns: undefined }
       reconcile_transaction: {
         Args: { p_external_id: string; p_status?: string }
         Returns: boolean
       }
       record_and_send_to_stripe: {
         Args: {
-          p_user_id: string
           p_amount: number
-          p_description: string
           p_currency?: string
+          p_description: string
           p_metadata?: Json
+          p_user_id: string
         }
         Returns: Json
       }
       record_storage_balance_movement: {
         Args: {
-          p_movement_type: string
           p_amount: number
-          p_source_location: string
-          p_destination_location: string
-          p_reference_id?: string
           p_description?: string
+          p_destination_location: string
           p_metadata?: Json
+          p_movement_type: string
+          p_reference_id?: string
+          p_source_location: string
         }
         Returns: string
       }
       record_storage_transaction: {
         Args: {
-          p_transaction_type: string
           p_amount: number
-          p_source?: string
-          p_destination?: string
-          p_reference_id?: string
           p_description?: string
+          p_destination?: string
           p_metadata?: Json
+          p_reference_id?: string
+          p_source?: string
+          p_transaction_type: string
         }
         Returns: number
       }
-      request_stripe_instant_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      request_stripe_instant_transfer: { Args: never; Returns: string }
       request_stripe_transfer_verification: {
         Args: { amount: number }
         Returns: Json
       }
       resend_failed_transfers: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
+          amount: number
           id: number
           payment_id: string
-          amount: number
-          status: string
-          retry_count: number
           processed_at: string
+          retry_count: number
+          status: string
         }[]
       }
       reset_storage_balance: {
         Args: { transferred_amount: number }
         Returns: undefined
       }
-      rollback_transaction: {
-        Args: { session_id: string }
-        Returns: undefined
-      }
-      run_autonomous_monetization_engine: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      run_autonomous_revenue_scheduler: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      scale_revenue_workers: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      scale_vm_resources: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      rollback_transaction: { Args: { session_id: string }; Returns: undefined }
+      run_autonomous_monetization_engine: { Args: never; Returns: undefined }
+      run_autonomous_revenue_scheduler: { Args: never; Returns: Json }
+      scale_revenue_workers: { Args: never; Returns: Json }
+      scale_vm_resources: { Args: never; Returns: undefined }
       schedule_balance_transfer_reconciliation: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: undefined
       }
-      scheduled_revenue_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      scheduled_revenue_transfer: { Args: never; Returns: Json }
       setup_autonomous_revenue_stripe: {
         Args: {
+          p_auto_transfer?: boolean
+          p_bank_account_id: string
           p_stripe_account_id: string
           p_stripe_api_key: string
-          p_bank_account_id: string
-          p_auto_transfer?: boolean
-          p_transfer_threshold?: number
           p_transfer_frequency?: string
+          p_transfer_threshold?: number
         }
         Returns: string
       }
@@ -5597,23 +6503,26 @@ export type Database = {
         Args: { p_frequency?: string }
         Returns: string
       }
-      setup_stripe_integration: {
-        Args:
-          | {
-              p_api_key: string
+      setup_stripe_integration:
+        | {
+            Args: {
               p_account_id: string
+              p_api_key: string
+              p_auto_transfer?: boolean
+              p_minimum_transfer_amount?: number
+              p_transfer_frequency?: string
               p_webhook_secret?: string
-              p_auto_transfer?: boolean
-              p_transfer_frequency?: string
-              p_minimum_transfer_amount?: number
             }
-          | {
+            Returns: string
+          }
+        | {
+            Args: {
               p_auto_transfer?: boolean
-              p_transfer_frequency?: string
               p_minimum_transfer_amount?: number
+              p_transfer_frequency?: string
             }
-        Returns: Json
-      }
+            Returns: Json
+          }
       simulate_autonomous_revenue: {
         Args: { p_days?: number; p_intensity?: string }
         Returns: {
@@ -5622,124 +6531,112 @@ export type Database = {
           campaign_id: string
           campaign_name: string
           day_number: number
-          spend: number
-          revenue: number
           profit: number
+          revenue: number
           roi: number
+          spend: number
         }[]
       }
       start_autonomous_revenue_stream: {
-        Args: { p_name: string; p_strategy: string; p_settings?: Json }
+        Args: { p_name: string; p_settings?: Json; p_strategy: string }
         Returns: string
       }
-      start_immediate_revenue_process: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      start_immediate_revenue_process: { Args: never; Returns: Json }
       stop_autonomous_revenue_stream: {
         Args: { p_stream_id: string }
         Returns: boolean
       }
       sync_stripe_revenue: {
         Args: {
-          p_stripe_payment_intent_id: string
           p_amount: number
           p_currency?: string
           p_customer_id?: string
+          p_stripe_payment_intent_id: string
         }
         Returns: string
       }
       track_optimization: {
         Args: {
-          p_stream_id: string
+          p_new_value: Json
           p_optimization_type: string
           p_previous_value: Json
-          p_new_value: Json
+          p_stream_id: string
         }
         Returns: string
       }
       track_storage_balance: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          balance_location: string
           amount: number
+          balance_location: string
+          description: string
+          status: string
           transfer_date: string
           transfer_number: string
-          status: string
-          description: string
         }[]
       }
       transfer_autonomous_revenue_to_stripe: {
         Args: { p_stripe_account_id: string }
         Returns: {
+          error_message: string
+          status: string
           total_transferred: number
           transaction_count: number
-          status: string
-          error_message: string
         }[]
       }
       transfer_revenue: {
         Args: {
-          p_source_user_id: string
-          p_destination_user_id: string
           p_amount: number
           p_description?: string
+          p_destination_user_id: string
+          p_source_user_id: string
         }
         Returns: string
       }
-      transfer_revenue_to_stripe: {
-        Args: Record<PropertyKey, never> | { p_amount?: number }
-        Returns: Json
-      }
-      transfer_specific_amount: {
-        Args: { amount: number }
-        Returns: Json
-      }
-      transfer_to_stripe: {
-        Args:
-          | {
+      transfer_revenue_to_stripe:
+        | { Args: never; Returns: Json }
+        | { Args: { p_amount?: number }; Returns: Json }
+      transfer_specific_amount: { Args: { amount: number }; Returns: Json }
+      transfer_to_cashapp: { Args: { p_amount: number }; Returns: Json }
+      transfer_to_stripe:
+        | {
+            Args: {
               p_amount: number
               p_currency?: string
               p_destination_account?: string
             }
-          | { transfer_amount: number }
-        Returns: boolean
-      }
+            Returns: Json
+          }
+        | { Args: { transfer_amount: number }; Returns: boolean }
       trigger_immediate_revenue_consolidation: {
         Args: { p_days_back?: number }
         Returns: Json
       }
-      trigger_revenue_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      trigger_stripe_instant_transfer: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      trigger_revenue_transfer: { Args: never; Returns: Json }
+      trigger_stripe_instant_transfer: { Args: never; Returns: Json }
       trigger_stripe_transfer: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          transfer_status: string
           balance_id: number
-          transfer_amount: number
           error_message: string
+          transfer_amount: number
+          transfer_status: string
         }[]
       }
-      update_application_balance: {
-        Args: Record<PropertyKey, never> | { new_balance: number }
-        Returns: Json
-      }
+      update_application_balance:
+        | { Args: never; Returns: undefined }
+        | { Args: { new_balance: number }; Returns: Json }
       update_application_balance_after_transfer: {
         Args: { transfer_amount: number }
         Returns: Json
       }
+      update_dashboard_cache: { Args: never; Returns: undefined }
       update_pending_transfers: {
         Args: { amount_to_add: number }
         Returns: Json
       }
       update_revenue_stream_metrics: {
-        Args: { p_stream_id: string; p_amount: number }
+        Args: { p_amount: number; p_stream_id: string }
         Returns: undefined
       }
       update_revenue_transfer_schedule: {
@@ -5748,59 +6645,57 @@ export type Database = {
       }
       update_stripe_credentials: {
         Args: {
-          p_api_key: string
-          p_webhook_secret: string
           p_account_id: string
+          p_api_key: string
           p_auto_transfer?: boolean
-          p_transfer_frequency?: string
           p_minimum_transfer_amount?: number
+          p_transfer_frequency?: string
+          p_webhook_secret: string
         }
         Returns: Json
       }
       update_user_wallet: {
-        Args: { p_user_id: string; p_amount: number }
+        Args: { p_amount: number; p_user_id: string }
         Returns: Json
       }
       update_wallet_balance: {
-        Args: { wallet_id: string; amount: number }
+        Args: { amount: number; wallet_id: string }
         Returns: number
       }
       update_wallet_balance_v2: {
-        Args: { wallet_id: string; amount: number }
+        Args: { amount: number; wallet_id: string }
         Returns: number
       }
       upsert_stripe_destination: {
         Args: {
           p_account_id: string
+          p_account_type?: string
           p_currency?: string
           p_is_active?: boolean
-          p_account_type?: string
         }
         Returns: {
-          destination_id: string
           destination_account_id: string
-          destination_is_active: boolean
           destination_created_at: string
+          destination_id: string
+          destination_is_active: boolean
           destination_updated_at: string
         }[]
       }
-      user_has_financial_access: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      user_has_financial_access: { Args: { user_id: string }; Returns: boolean }
       verify_transfer: {
         Args: { p_transfer_id: string }
         Returns: {
-          transfer_status: string
           amount: number
           destination: string
           error_message: string
+          transfer_status: string
         }[]
       }
       withdraw_funds_to_bank: {
         Args: { p_amount: number; p_description?: string }
         Returns: Json
       }
+      your_function: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

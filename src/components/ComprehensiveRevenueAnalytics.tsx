@@ -219,21 +219,28 @@ const ComprehensiveRevenueAnalytics = () => {
               <h3 className="text-white font-medium mb-4">Revenue by Source</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <RechartsPie>
-                  <RechartsPie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <defs>
+                    {COLORS.map((color, index) => (
+                      <linearGradient key={`gradient-${index}`} id={`colorGradient${index}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={color} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={color} stopOpacity={0.4}/>
+                      </linearGradient>
                     ))}
-                  </RechartsPie>
+                  </defs>
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
                   <Tooltip />
                 </RechartsPie>
               </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {pieData.map((entry, index) => (
+                  <div key={entry.name} className="flex items-center text-xs">
+                    <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                    <span className="text-slate-300">{entry.name}: ${entry.value.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

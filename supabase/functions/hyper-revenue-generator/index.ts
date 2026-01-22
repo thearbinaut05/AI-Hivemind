@@ -12,8 +12,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const executionId = `hyper_revenue_${Date.now()}`;
-  console.log(`[${executionId}] Starting hyper revenue generation`);
+  const executionId = `revenue_${Date.now()}`;
+  console.log(`[${executionId}] Starting production revenue aggregation - NO MOCK DATA`);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -22,56 +22,72 @@ serve(async (req) => {
   );
 
   try {
-    // Generate multiple high-value revenue streams simultaneously
+    // PRODUCTION: Aggregate REAL revenue from all sources
     const revenueStreams = await Promise.all([
-      generateAPIRevenue(supabase, executionId),
-      generateSubscriptionRevenue(supabase, executionId),
-      generateMarketplaceRevenue(supabase, executionId),
-      generateAffiliateRevenue(supabase, executionId),
-      generateDirectPayments(supabase, executionId),
-      generateContentLicensing(supabase, executionId),
-      generateCryptoRevenue(supabase, executionId),
-      generateDataMonetization(supabase, executionId)
+      aggregateRealAPIRevenue(supabase, executionId),
+      aggregateRealSubscriptionRevenue(supabase, executionId),
+      aggregateRealMarketplaceRevenue(supabase, executionId),
+      aggregateRealAffiliateRevenue(supabase, executionId),
+      aggregateRealDirectPayments(supabase, executionId),
+      aggregateRealContentLicensing(supabase, executionId),
+      aggregateRealCryptoRevenue(supabase, executionId),
+      aggregateRealDataMonetization(supabase, executionId)
     ]);
 
     const totalAmount = revenueStreams.reduce((sum, stream) => sum + stream.amount, 0);
     const totalTransactions = revenueStreams.reduce((sum, stream) => sum + stream.count, 0);
 
-    // Update application balance immediately
-    await supabase
-      .from('application_balance')
-      .upsert({
-        id: 1,
-        balance_amount: totalAmount,
-        last_updated_at: new Date().toISOString()
-      });
+    // Only update if there's real revenue
+    if (totalAmount > 0) {
+      // Get current balance and add to it
+      const { data: currentBalance } = await supabase
+        .from('application_balance')
+        .select('balance_amount')
+        .eq('id', 1)
+        .single();
 
-    // Update revenue streams metrics
-    for (const stream of revenueStreams) {
+      const newBalance = (currentBalance?.balance_amount || 0) + totalAmount;
+
       await supabase
-        .from('autonomous_revenue_streams')
+        .from('application_balance')
         .upsert({
-          name: stream.name,
-          strategy: stream.strategy,
-          status: 'active',
-          metrics: {
-            total_revenue: stream.amount,
-            transaction_count: stream.count,
-            peak_transaction: stream.peak,
-            last_generated: new Date().toISOString()
-          }
-        }, { onConflict: 'name' });
+          id: 1,
+          balance_amount: newBalance,
+          last_updated_at: new Date().toISOString()
+        });
+
+      // Update revenue streams metrics
+      for (const stream of revenueStreams) {
+        if (stream.amount > 0) {
+          await supabase
+            .from('autonomous_revenue_streams')
+            .upsert({
+              name: stream.name,
+              strategy: stream.strategy,
+              status: 'active',
+              metrics: {
+                total_revenue: stream.amount,
+                transaction_count: stream.count,
+                peak_transaction: stream.peak,
+                last_aggregated: new Date().toISOString(),
+                source: 'production_real_data'
+              }
+            }, { onConflict: 'name' });
+        }
+      }
     }
 
-    console.log(`[${executionId}] Generated $${totalAmount.toFixed(2)} from ${totalTransactions} transactions`);
+    console.log(`[${executionId}] Aggregated $${totalAmount.toFixed(2)} from ${totalTransactions} real transactions`);
 
     return new Response(JSON.stringify({
       success: true,
       total_amount: totalAmount,
       transaction_count: totalTransactions,
-      revenue_streams: revenueStreams.length,
+      revenue_streams: revenueStreams.filter(s => s.amount > 0).length,
       execution_id: executionId,
-      streams: revenueStreams
+      streams: revenueStreams,
+      production_mode: true,
+      no_mock_data: true
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200
@@ -90,310 +106,178 @@ serve(async (req) => {
   }
 });
 
-async function generateAPIRevenue(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 15) + 10; // 10-25 transactions
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL API revenue from existing transactions
+async function aggregateRealAPIRevenue(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'api_usage' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 95 + 5; // $5-$100
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'api_usage',
-        source: 'API Premium Tier',
-        endpoint: `/api/v1/premium/${Math.floor(Math.random() * 1000)}`,
-        user_tier: 'enterprise',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  // Batch insert all transactions
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'API Premium Services',
     strategy: 'api_usage',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateSubscriptionRevenue(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 12) + 8; // 8-20 subscriptions
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL subscription revenue
+async function aggregateRealSubscriptionRevenue(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'subscription' });
 
-  for (let i = 0; i < count; i++) {
-    const tiers = [29.99, 79.99, 199.99, 499.99];
-    const amount = tiers[Math.floor(Math.random() * tiers.length)];
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      performance_obligation_satisfied: true,
-      metadata: {
-        strategy: 'subscription',
-        plan: amount === 29.99 ? 'Basic' : amount === 79.99 ? 'Premium' : amount === 199.99 ? 'Enterprise' : 'Ultimate',
-        billing_cycle: 'monthly',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Subscription Services',
     strategy: 'subscription',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateMarketplaceRevenue(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 20) + 15; // 15-35 sales
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL marketplace revenue
+async function aggregateRealMarketplaceRevenue(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'marketplace' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 295 + 15; // $15-$310
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'marketplace',
-        product_category: ['Digital Templates', 'Software Tools', 'Design Assets', 'Data Analytics'][Math.floor(Math.random() * 4)],
-        commission_rate: 0.15,
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Marketplace Sales',
     strategy: 'marketplace',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateAffiliateRevenue(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 25) + 20; // 20-45 referrals
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL affiliate revenue
+async function aggregateRealAffiliateRevenue(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'affiliate_marketing' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 85 + 10; // $10-$95
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'affiliate_marketing',
-        partner: ['TechCorp', 'DataSolutions', 'CloudServices', 'AICompany'][Math.floor(Math.random() * 4)],
-        commission_type: 'performance',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Affiliate Commissions',
     strategy: 'affiliate_marketing',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateDirectPayments(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 8) + 5; // 5-13 direct payments
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL direct payments
+async function aggregateRealDirectPayments(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'direct_payment' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 450 + 50; // $50-$500
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'direct_payment',
-        service_type: ['Consulting', 'Custom Development', 'Training', 'Support'][Math.floor(Math.random() * 4)],
-        client_tier: 'enterprise',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Direct Client Payments',
     strategy: 'direct_payment',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateContentLicensing(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 18) + 12; // 12-30 licenses
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL content licensing
+async function aggregateRealContentLicensing(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'content_licensing' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 145 + 25; // $25-$170
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'content_licensing',
-        content_type: ['Video Content', 'Written Content', 'Audio Content', 'Interactive Media'][Math.floor(Math.random() * 4)],
-        license_duration: '12_months',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Content Licensing',
     strategy: 'content_licensing',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateCryptoRevenue(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 6) + 3; // 3-9 crypto transactions
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL crypto revenue
+async function aggregateRealCryptoRevenue(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'crypto_services' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 750 + 100; // $100-$850
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'crypto_services',
-        service: ['DeFi Integration', 'Smart Contracts', 'NFT Platform', 'Crypto Analytics'][Math.floor(Math.random() * 4)],
-        blockchain: 'ethereum',
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Crypto Services',
     strategy: 'crypto_services',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
 
-async function generateDataMonetization(supabase: any, executionId: string) {
-  const transactions = [];
-  const count = Math.floor(Math.random() * 22) + 18; // 18-40 data sales
-  let totalAmount = 0;
-  let peakTransaction = 0;
+// Aggregate REAL data monetization
+async function aggregateRealDataMonetization(supabase: any, executionId: string) {
+  const { data: transactions } = await supabase
+    .from('autonomous_revenue_transactions')
+    .select('*')
+    .eq('status', 'completed')
+    .contains('metadata', { strategy: 'data_monetization' });
 
-  for (let i = 0; i < count; i++) {
-    const amount = Math.random() * 65 + 15; // $15-$80
-    totalAmount += amount;
-    peakTransaction = Math.max(peakTransaction, amount);
-
-    const transaction = {
-      stream_id: crypto.randomUUID(),
-      amount: amount,
-      currency: 'USD',
-      status: 'completed',
-      metadata: {
-        strategy: 'data_monetization',
-        data_type: ['Market Analytics', 'User Insights', 'Performance Metrics', 'Trend Analysis'][Math.floor(Math.random() * 4)],
-        anonymized: true,
-        execution_id: executionId
-      }
-    };
-
-    transactions.push(transaction);
-  }
-
-  await supabase.from('autonomous_revenue_transactions').insert(transactions);
+  const totalAmount = (transactions || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const peakTransaction = transactions?.length > 0 
+    ? Math.max(...transactions.map((t: any) => Number(t.amount)))
+    : 0;
 
   return {
     name: 'Data Monetization',
     strategy: 'data_monetization',
     amount: totalAmount,
-    count: count,
+    count: transactions?.length || 0,
     peak: peakTransaction
   };
 }
