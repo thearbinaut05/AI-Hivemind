@@ -217,10 +217,8 @@ const ComprehensiveCashOut = () => {
           toast.error(aggregateData?.message || 'Aggregation failed');
         }
       } else {
-        // PayPal transfer (placeholder - would need PayPal integration)
-        toast.info('PayPal integration coming soon. Using Stripe for now...');
-        // Fallback to Stripe transfer
-        await executeTransfer(transferAmount);
+        // PayPal requires PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET secrets
+        toast.error('PayPal integration requires API credentials. Please use Stripe or configure PayPal secrets.');
         return;
       }
 

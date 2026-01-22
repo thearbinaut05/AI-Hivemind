@@ -58,30 +58,10 @@ const RevenueDashboard = () => {
   const [transferring, setTransferring] = useState(false);
   const [realTimeBalance, setRealTimeBalance] = useState(0);
 
-  // Auto-generation runs every 8-12 seconds for maximum revenue
+  // Production mode: Only aggregate real data, no auto-generation
   useEffect(() => {
-    const generateRevenue = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('hyper-revenue-generator');
-        if (data?.success) {
-          setRealTimeBalance(prev => prev + (data.total_amount || 0));
-          loadDashboardData();
-        }
-      } catch (error) {
-        console.error('Auto-generation error:', error);
-      }
-    };
-
-    // Start immediate generation
-    generateRevenue();
-    
-    // Set up continuous generation every 8-12 seconds
-    const interval = setInterval(() => {
-      const randomDelay = 8000 + Math.random() * 4000; // 8-12 seconds
-      setTimeout(generateRevenue, randomDelay);
-    }, 10000);
-
-    return () => clearInterval(interval);
+    // Load real data on mount
+    loadDashboardData();
   }, []);
 
   useEffect(() => {

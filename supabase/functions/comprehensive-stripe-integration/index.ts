@@ -20,57 +20,62 @@ serve(async (req) => {
   );
 
   try {
-    console.log("🚀 Starting comprehensive Stripe integration with ASC 606/IFRS 15 compliance...");
+    console.log("🚀 Starting PRODUCTION Stripe integration - NO MOCK DATA");
     
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY not configured");
+      throw new Error("STRIPE_SECRET_KEY not configured - add your real Stripe API key");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // 1. Analyze all revenue sources across the database
+    // 1. Analyze all REAL revenue sources across the database
     const revenueAnalysis = await analyzeAllRevenueSources(supabaseClient);
     
-    // 2. Calculate total transferable balance with ASC 606 compliance
+    // 2. Calculate total transferable balance from REAL data
     const transferableBalance = await calculateTransferableBalance(supabaseClient);
     
-    // 3. Create detailed transaction records for transparency
+    // 3. Create detailed transaction records
     const transactionDetails = await createDetailedTransactionRecords(supabaseClient);
     
-    // 4. Execute maximum profitability transfer to Stripe
-    const stripeTransfer = await executeMaximumProfitabilityTransfer(
+    // 4. Execute REAL Stripe payout - no simulations
+    const stripeTransfer = await executeRealStripePayout(
       stripe, 
       transferableBalance, 
       transactionDetails
     );
 
-    // 5. Update all relevant tables with compliance data
+    if (!stripeTransfer.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: stripeTransfer.message,
+        balance: transferableBalance.total,
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // 5. Update all relevant tables after successful transfer
     await updateComplianceRecords(supabaseClient, stripeTransfer, revenueAnalysis);
 
-    // 6. Optimize and maximize future revenue streams
-    await optimizeRevenueStreams(supabaseClient);
-
-    console.log(`✅ Successfully transferred $${transferableBalance.total.toFixed(2)} to Stripe with full compliance`);
+    console.log(`✅ Successfully transferred $${transferableBalance.total.toFixed(2)} to bank account`);
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Comprehensive Stripe integration completed - $${transferableBalance.total.toFixed(2)} transferred`,
+      message: `PRODUCTION: $${transferableBalance.total.toFixed(2)} transferred to bank account`,
       total_amount: transferableBalance.total,
-      stripe_transfer_id: stripeTransfer.id,
-      compliance_verified: true,
+      stripe_payout_id: stripeTransfer.payout_id,
+      arrival_date: stripeTransfer.arrival_date,
+      production_mode: true,
+      no_mock_data: true,
       revenue_analysis: revenueAnalysis,
-      transaction_details: transactionDetails,
-      optimization_applied: true,
-      asc_606_compliant: true,
-      ifrs_15_compliant: true,
-      human_intervention_required: false,
       transfer_details: {
         amount_transferred: transferableBalance.total,
         revenue_portion: transferableBalance.revenue_portion,
         balance_portion: transferableBalance.balance_portion,
-        arrival_date: new Date(stripeTransfer.arrival_date * 1000).toISOString(),
-        stripe_transfer_id: stripeTransfer.id
+        payout_id: stripeTransfer.payout_id
       }
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -78,7 +83,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('💥 Comprehensive integration error:', error);
+    console.error('💥 Stripe integration error:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       success: false,
@@ -91,14 +96,13 @@ serve(async (req) => {
 });
 
 async function analyzeAllRevenueSources(supabase: any) {
-  console.log("📊 Analyzing all revenue sources across database...");
+  console.log("📊 Analyzing all REAL revenue sources...");
   
   // Analyze autonomous revenue transactions
   const { data: autonomousRevenue } = await supabase
     .from('autonomous_revenue_transactions')
     .select('*')
-    .eq('status', 'completed')
-    .eq('performance_obligation_satisfied', true);
+    .eq('status', 'completed');
 
   // Analyze application balance
   const { data: appBalance } = await supabase
@@ -116,12 +120,6 @@ async function analyzeAllRevenueSources(supabase: any) {
     .select('*')
     .gt('revenue', 0);
 
-  // Analyze cash out requests
-  const { data: cashOuts } = await supabase
-    .from('cash_out_requests')
-    .select('*')
-    .eq('status', 'pending');
-
   const totalRevenue = (autonomousRevenue || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0) +
                       (earnings || []).reduce((sum: number, e: any) => sum + Number(e.amount), 0) +
                       (campaigns || []).reduce((sum: number, c: any) => sum + Number(c.revenue), 0);
@@ -129,36 +127,30 @@ async function analyzeAllRevenueSources(supabase: any) {
   return {
     autonomous_revenue: {
       total: (autonomousRevenue || []).reduce((sum: number, t: any) => sum + Number(t.amount), 0),
-      count: (autonomousRevenue || []).length,
-      transactions: autonomousRevenue || []
+      count: (autonomousRevenue || []).length
     },
     earnings: {
       total: (earnings || []).reduce((sum: number, e: any) => sum + Number(e.amount), 0),
-      count: (earnings || []).length,
-      records: earnings || []
+      count: (earnings || []).length
     },
     campaign_revenue: {
       total: (campaigns || []).reduce((sum: number, c: any) => sum + Number(c.revenue), 0),
-      count: (campaigns || []).length,
-      campaigns: campaigns || []
+      count: (campaigns || []).length
     },
     application_balance: appBalance?.[0]?.balance_amount || 0,
-    pending_cash_outs: (cashOuts || []).reduce((sum: number, co: any) => sum + Number(co.amount), 0),
     total_revenue: totalRevenue,
-    compliance_status: 'ASC_606_IFRS_15_COMPLIANT'
+    production_mode: true
   };
 }
 
 async function calculateTransferableBalance(supabase: any) {
-  console.log("💰 Calculating transferable balance with ASC 606 compliance...");
+  console.log("💰 Calculating REAL transferable balance...");
   
-  // Get all revenue that meets ASC 606 criteria
+  // Get all completed revenue
   const { data: compliantRevenue } = await supabase
     .from('autonomous_revenue_transactions')
     .select('*')
-    .eq('status', 'completed')
-    .eq('performance_obligation_satisfied', true)
-    .not('revenue_recognition_date', 'is', null);
+    .eq('status', 'completed');
 
   // Get application balance
   const { data: balance } = await supabase
@@ -172,112 +164,89 @@ async function calculateTransferableBalance(supabase: any) {
   return {
     total: revenueTotal + appBalance,
     revenue_portion: revenueTotal,
-    balance_portion: appBalance,
-    compliance_verified: true,
-    performance_obligations_satisfied: true,
-    revenue_recognition_complete: true
+    balance_portion: appBalance
   };
 }
 
 async function createDetailedTransactionRecords(supabase: any) {
-  console.log("📝 Creating detailed transaction records for transparency...");
-  
   return {
     timestamp: new Date().toISOString(),
-    compliance_framework: 'ASC_606_IFRS_15',
-    revenue_recognition_method: 'POINT_IN_TIME',
-    performance_obligations: 'SATISFIED',
-    contract_modifications: 'NONE',
-    variable_consideration: 'INCLUDED',
-    transaction_price_allocation: 'COMPLETE',
-    revenue_categories: {
-      autonomous_streams: 'RECURRING_REVENUE',
-      digital_products: 'PRODUCT_REVENUE',
-      api_usage: 'USAGE_BASED_REVENUE',
-      content_licensing: 'LICENSING_REVENUE',
-      affiliate_marketing: 'COMMISSION_REVENUE'
-    },
-    audit_trail: 'COMPLETE',
-    financial_statement_impact: 'REVENUE_INCREASE'
+    production_mode: true,
+    no_mock_data: true
   };
 }
 
-async function executeMaximumProfitabilityTransfer(stripe: any, balance: any, details: any) {
-  console.log("🚀 Executing maximum profitability payout to bank account...");
+async function executeRealStripePayout(stripe: any, balance: any, details: any) {
+  console.log("🚀 Executing REAL Stripe payout...");
   
   if (balance.total < 1) {
-    console.log("⚠️ Balance below $1, skipping payout but creating record for transparency");
     return {
-      id: 'simulated_' + Date.now(),
-      amount: Math.round(balance.total * 100),
-      arrival_date: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
-      created: Math.floor(Date.now() / 1000),
-      currency: 'usd',
-      description: 'Simulated payout - below minimum threshold',
-      method: 'standard'
+      success: false,
+      message: `Balance too low for payout: $${balance.total.toFixed(2)}. Minimum is $1.00`
     };
   }
 
   const amountInCents = Math.round(balance.total * 100);
 
   try {
-    // Create payout to bank account with detailed metadata
+    // Check Stripe balance first
+    const stripeBalance = await stripe.balance.retrieve();
+    const availableBalance = stripeBalance.available.find((b: any) => b.currency === 'usd');
+    const availableAmount = availableBalance?.amount || 0;
+
+    if (availableAmount < amountInCents) {
+      return {
+        success: false,
+        message: `Insufficient Stripe balance. Available: $${(availableAmount / 100).toFixed(2)}, Requested: $${balance.total.toFixed(2)}`
+      };
+    }
+
+    // Create REAL payout to bank account
     const payout = await stripe.payouts.create({
       amount: amountInCents,
       currency: 'usd',
       method: 'standard',
-      description: `Maximum Profitability Payout - ASC 606/IFRS 15 Compliant - $${balance.total.toFixed(2)}`,
+      description: `Production Payout - $${balance.total.toFixed(2)}`,
       metadata: {
-        compliance_framework: 'ASC_606_IFRS_15',
-        revenue_recognition_complete: 'true',
-        performance_obligations_satisfied: 'true',
-        total_revenue_sources: balance.revenue_portion.toString(),
-        application_balance: balance.balance_portion.toString(),
-        transfer_type: 'MAXIMUM_PROFITABILITY',
-        automation_level: 'FULL_AUTONOMOUS',
-        human_intervention: 'NONE_REQUIRED',
-        profit_optimization: 'MAXIMIZED',
+        production_mode: 'true',
+        no_mock_data: 'true',
         timestamp: new Date().toISOString()
       }
     });
 
     console.log(`✅ Stripe payout created: ${payout.id} for $${balance.total.toFixed(2)}`);
-    return payout;
-  } catch (error) {
-    console.error('Stripe payout error:', error);
-    // Return simulated payout for testing
+    
     return {
-      id: 'simulated_' + Date.now(),
-      amount: amountInCents,
-      arrival_date: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-      created: Math.floor(Date.now() / 1000),
-      currency: 'usd',
-      description: `Simulated payout - ${error.message}`,
-      method: 'standard'
+      success: true,
+      payout_id: payout.id,
+      amount: balance.total,
+      arrival_date: new Date(payout.arrival_date * 1000).toISOString()
+    };
+  } catch (error: any) {
+    console.error('Stripe payout error:', error);
+    return {
+      success: false,
+      message: `Stripe payout failed: ${error.message}`
     };
   }
 }
 
 async function updateComplianceRecords(supabase: any, transfer: any, analysis: any) {
-  console.log("📊 Updating compliance records...");
+  console.log("📊 Updating records after successful transfer...");
   
-  // Update transfer logs with detailed compliance info
+  // Update transfer logs
   await supabase
     .from('autonomous_revenue_transfer_logs')
     .insert({
-      source_account: 'comprehensive_revenue_system',
+      source_account: 'production_revenue_system',
       destination_account: 'stripe_bank_account',
-      amount: transfer.amount / 100,
+      amount: transfer.amount,
       status: 'completed',
       metadata: {
-        stripe_transfer_id: transfer.id,
-        compliance_framework: 'ASC_606_IFRS_15',
-        revenue_analysis: analysis,
-        transfer_type: 'MAXIMUM_PROFITABILITY',
-        automation_complete: true,
-        human_intervention_required: false,
-        profit_maximization_applied: true,
-        arrival_date: new Date(transfer.arrival_date * 1000).toISOString()
+        stripe_payout_id: transfer.payout_id,
+        production_mode: true,
+        no_mock_data: true,
+        arrival_date: transfer.arrival_date
       }
     });
 
@@ -287,16 +256,13 @@ async function updateComplianceRecords(supabase: any, transfer: any, analysis: a
     .update({
       status: 'transferred',
       metadata: {
-        stripe_transfer_id: transfer.id,
-        transferred_at: new Date().toISOString(),
-        compliance_verified: true,
-        asc_606_compliant: true,
-        ifrs_15_compliant: true
+        stripe_payout_id: transfer.payout_id,
+        transferred_at: new Date().toISOString()
       }
     })
     .eq('status', 'completed');
 
-  // Update application balance
+  // Reset application balance
   await supabase
     .from('application_balance')
     .update({
@@ -304,28 +270,4 @@ async function updateComplianceRecords(supabase: any, transfer: any, analysis: a
       last_updated_at: new Date().toISOString()
     })
     .eq('id', 1);
-}
-
-async function optimizeRevenueStreams(supabase: any) {
-  console.log("⚡ Optimizing revenue streams for maximum profitability...");
-  
-  // Enhance all revenue streams for maximum performance
-  await supabase
-    .from('autonomous_revenue_streams')
-    .update({
-      settings: {
-        optimization_level: 'MAXIMUM',
-        profit_maximization: true,
-        automated_scaling: true,
-        performance_monitoring: true,
-        compliance_tracking: true,
-        revenue_acceleration: true
-      },
-      metrics: {
-        optimization_applied: true,
-        profit_maximization_enabled: true,
-        last_optimization: new Date().toISOString()
-      }
-    })
-    .eq('status', 'active');
 }
