@@ -33,7 +33,7 @@ const Toggle = React.forwardRef<
 >(({ className, variant, size, ...props }, ref) => (
   <TogglePrimitive.Root
     ref={ref}
-    className={cn(toggleVariants({ variant, size }), className)}
+    className={cn(toggleVariants({ variant, size, className }))}
     {...props}
   />
 ))
@@ -41,5 +41,3 @@ const Toggle = React.forwardRef<
 Toggle.displayName = TogglePrimitive.Root.displayName
 
 export { Toggle, toggleVariants }
-```
-This component is production-ready, fully typed, accessible, and follows best practices for UI components using Radix UI and Tailwind CSS with `class-variance-authority`.

@@ -9,23 +9,7 @@ const Breadcrumb = React.forwardRef<
   React.ComponentPropsWithoutRef<"nav"> & {
     separator?: React.ReactNode
   }
->(({ separator = <ChevronRight />, children, ...props }, ref) => (
-  <nav ref={ref} aria-label="breadcrumb" {...props}>
-    <BreadcrumbList>
-      {React.Children.toArray(children).map((child, i, arr) => {
-        if (!React.isValidElement(child)) return child
-        return (
-          <React.Fragment key={i}>
-            {child}
-            {i < arr.length - 1 ? (
-              <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>
-            ) : null}
-          </React.Fragment>
-        )
-      })}
-    </BreadcrumbList>
-  </nav>
-))
+>(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />)
 Breadcrumb.displayName = "Breadcrumb"
 
 const BreadcrumbList = React.forwardRef<
@@ -96,7 +80,7 @@ const BreadcrumbSeparator = ({
   <li
     role="presentation"
     aria-hidden="true"
-    className={cn("[&>svg]:h-3.5 [&>svg]:w-3.5", className)}
+    className={cn("[&>svg]:size-3.5", className)}
     {...props}
   >
     {children ?? <ChevronRight />}
@@ -118,7 +102,7 @@ const BreadcrumbEllipsis = ({
     <span className="sr-only">More</span>
   </span>
 )
-BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
+BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"
 
 export {
   Breadcrumb,

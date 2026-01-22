@@ -62,11 +62,12 @@ const SelectScrollDownButton = React.forwardRef<
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
 ))
-SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned" }
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
@@ -155,5 +156,3 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
-```
-This is a complete, production-ready Select component built on Radix UI’s `SelectPrimitive` backed by types and polished UI, with proper ref forwarding, and accessibility considerations. The utility `cn` is used for conditional and concatenated classNames per best styling practices.

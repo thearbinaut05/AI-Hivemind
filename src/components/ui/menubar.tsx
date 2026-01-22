@@ -126,13 +126,14 @@ MenubarItem.displayName = MenubarPrimitive.Item.displayName
 const MenubarCheckboxItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.CheckboxItem>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, checked, ...props }, ref) => (
   <MenubarPrimitive.CheckboxItem
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
+    checked={checked}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -211,7 +212,7 @@ const MenubarShortcut = ({
     />
   )
 }
-MenubarShortcut.displayName = "MenubarShortcut"
+MenubarShortcut.displayname = "MenubarShortcut"
 
 export {
   Menubar,
@@ -231,5 +232,3 @@ export {
   MenubarSub,
   MenubarShortcut,
 }
-```
-This completes the menubar.tsx file with a production-ready implementation, following best practices and consistent styling/hooks from Radix UI and lucide-react icons. All placeholders (`...`) have been replaced with the relevant code as per the pattern you started.

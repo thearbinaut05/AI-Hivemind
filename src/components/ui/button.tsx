@@ -1,20 +1,11 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import clsx from "clsx"
 
-/**
- * Utility function for conditional className merging.
- * Uses `clsx` under the hood.
- * @param inputs - Class names or objects mapping class names to boolean.
- * @returns Merged className string.
- */
-function cn(...inputs: clsx.ClassValue[]): string {
-  return clsx(...inputs)
-}
+import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -45,24 +36,15 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  /**
-   * When true, the button will render as the child component using Radix Slot.
-   * Useful for integrating with other components while inheriting styles.
-   * @default false
-   */
   asChild?: boolean
 }
 
-/**
- * A styled Button component supporting multiple variants and sizes.
- * Supports rendering as different components with `asChild`.
- */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       />

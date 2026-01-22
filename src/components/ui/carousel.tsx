@@ -66,13 +66,13 @@ const Carousel = React.forwardRef<
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
-    const onSelect = React.useCallback((emblaApi: CarouselApi) => {
-      if (!emblaApi) {
+    const onSelect = React.useCallback((api: CarouselApi) => {
+      if (!api) {
         return
       }
 
-      setCanScrollPrev(emblaApi.canScrollPrev())
-      setCanScrollNext(emblaApi.canScrollNext())
+      setCanScrollPrev(api.canScrollPrev())
+      setCanScrollNext(api.canScrollNext())
     }, [])
 
     const scrollPrev = React.useCallback(() => {
@@ -114,8 +114,7 @@ const Carousel = React.forwardRef<
       api.on("select", onSelect)
 
       return () => {
-        api.off("reInit", onSelect)
-        api.off("select", onSelect)
+        api?.off("select", onSelect)
       }
     }, [api, onSelect])
 
@@ -123,7 +122,7 @@ const Carousel = React.forwardRef<
       <CarouselContext.Provider
         value={{
           carouselRef,
-          api: api!,
+          api: api,
           opts,
           orientation:
             orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
@@ -205,7 +204,7 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full",
+        "absolute  h-8 w-8 rounded-full",
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
@@ -213,7 +212,6 @@ const CarouselPrevious = React.forwardRef<
       )}
       disabled={!canScrollPrev}
       onClick={scrollPrev}
-      aria-label="Previous slide"
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
@@ -243,7 +241,6 @@ const CarouselNext = React.forwardRef<
       )}
       disabled={!canScrollNext}
       onClick={scrollNext}
-      aria-label="Next slide"
       {...props}
     >
       <ArrowRight className="h-4 w-4" />

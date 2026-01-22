@@ -1,34 +1,26 @@
-import * as React from "react";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & { value?: number }
->(({ className, value = 0, ...props }, ref) => {
-  // Clamp value to the valid range [0, 100]
-  const safeValue = Math.min(100, Math.max(0, value));
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+      className
+    )}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full w-full flex-1 bg-primary transition-all"
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
 
-  return (
-    <ProgressPrimitive.Root
-      ref={ref}
-      className={cn(
-        "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-        className
-      )}
-      value={safeValue}
-      {...props}
-    >
-      <ProgressPrimitive.Indicator
-        className="h-full bg-primary transition-transform duration-200 ease-in-out"
-        style={{ transform: `translateX(-${100 - safeValue}%)` }}
-      />
-    </ProgressPrimitive.Root>
-  );
-});
-Progress.displayName = ProgressPrimitive.Root.displayName;
-
-export { Progress };
-```
-This code provides a fully functional, production-ready progress bar component using Radix UI's Progress Primitive with proper TypeScript typing and best practices, including clamping the progress value and handling class names with a utility function `cn`.
+export { Progress }

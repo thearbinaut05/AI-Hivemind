@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,46 +28,40 @@ const FullAutomationController = () => {
     setIsProcessing(true);
     try {
       toast.info('🚀 Initiating comprehensive USD transfer across entire database...');
-
+      
       const { data, error } = await supabase.functions.invoke('comprehensive-usd-aggregator', {
-        body: JSON.stringify({ triggered_by: 'manual_full_transfer' }),
+        body: { triggered_by: 'manual_full_transfer' }
       });
-
+      
       if (error) throw error;
-
+      
       if (data?.success) {
         toast.success(`✅ SUCCESS: $${data.total_transferred?.toFixed(2)} transferred to all external accounts!`);
-        if (data.breakdown && Object.keys(data.breakdown).length > 0) {
-          toast.success(`💰 Breakdown: ${Object.entries(data.breakdown).map(([k, v]: [string, any]) => `${k}: $${Number(v).toFixed(2)}`).join(', ')}`);
-        }
+        toast.success(`💰 Breakdown: ${Object.entries(data.breakdown || {}).map(([k, v]: [string, any]) => `${k}: $${v.toFixed(2)}`).join(', ')}`);
       } else {
         toast.error(data?.message || 'Transfer failed');
       }
     } catch (error: any) {
       console.error('Full transfer error:', error);
-      toast.error(`Transfer failed: ${error.message || String(error)}`);
+      toast.error(`Transfer failed: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const scheduleAutomation = async () => {
-    if (scheduleType === 'manual') {
-      toast.error('Please select a schedule other than "Manual Only" to enable automation.');
-      return;
-    }
     try {
       toast.info(`Setting up ${scheduleType} automated transfers...`);
-
+      
       const { data, error } = await supabase.functions.invoke('automated-full-transfer-scheduler', {
-        body: JSON.stringify({ 
+        body: { 
           schedule_type: scheduleType,
-          action: 'setup_schedule',
-        }),
+          action: 'setup_schedule'
+        }
       });
-
+      
       if (error) throw error;
-
+      
       if (data?.success) {
         setAutomationEnabled(true);
         toast.success(`🤖 Automated ${scheduleType} transfers enabled!`);
@@ -78,32 +73,13 @@ const FullAutomationController = () => {
       }
     } catch (error: any) {
       console.error('Automation setup error:', error);
-      toast.error(`Automation setup failed: ${error.message || String(error)}`);
+      toast.error(`Automation setup failed: ${error.message}`);
     }
   };
 
-  const stopAutomation = async () => {
-    try {
-      toast.info('Stopping automated transfers...');
-
-      const { data, error } = await supabase.functions.invoke('automated-full-transfer-scheduler', {
-        body: JSON.stringify({
-          action: 'stop_schedule',
-        }),
-      });
-
-      if (error) throw error;
-
-      if (data?.success) {
-        setAutomationEnabled(false);
-        toast.success('🛑 Automated transfers stopped');
-      } else {
-        toast.error(data?.message || 'Failed to stop automation');
-      }
-    } catch (error: any) {
-      console.error('Automation stop error:', error);
-      toast.error(`Failed to stop automation: ${error.message || String(error)}`);
-    }
+  const stopAutomation = () => {
+    setAutomationEnabled(false);
+    toast.success('🛑 Automated transfers stopped');
   };
 
   return (
@@ -134,7 +110,6 @@ const FullAutomationController = () => {
               disabled={isProcessing}
               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               size="lg"
-              aria-label="Execute Full Database Transfer"
             >
               {isProcessing ? (
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
@@ -153,13 +128,9 @@ const FullAutomationController = () => {
             </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="scheduleTypeSelect" className="text-sm text-slate-300 mb-2 block">Schedule Type</label>
-                <Select
-                  value={scheduleType}
-                  onValueChange={setScheduleType}
-                  id="scheduleTypeSelect"
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600" aria-label="Select automation schedule type">
+                <label className="text-sm text-slate-300 mb-2 block">Schedule Type</label>
+                <Select value={scheduleType} onValueChange={setScheduleType}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -176,9 +147,7 @@ const FullAutomationController = () => {
                   <Button
                     onClick={scheduleAutomation}
                     disabled={scheduleType === 'manual'}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-disabled={scheduleType === 'manual'}
-                    aria-label="Enable automation transfers"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Enable Automation
@@ -188,7 +157,6 @@ const FullAutomationController = () => {
                     onClick={stopAutomation}
                     variant="destructive"
                     className="flex-1"
-                    aria-label="Stop automation transfers"
                   >
                     <StopCircle className="h-4 w-4 mr-2" />
                     Stop Automation

@@ -23,10 +23,10 @@ serve(async (req) => {
 
   try {
     console.log(`[${executionId}] 🏦 AUTONOMOUS BALANCE TRANSFER - Starting execution...`);
-
+    
     // =================== STEP 1: RETRIEVE APPLICATION BALANCE ===================
     console.log(`[${executionId}] 📊 Step 1: Retrieving internal application balance...`);
-
+    
     const { data: appBalance, error: balanceError } = await supabaseClient
       .from('application_balance')
       .select('*')
@@ -35,16 +35,13 @@ serve(async (req) => {
     if (balanceError) {
       throw new Error(`Database error retrieving balance: ${balanceError.message}`);
     }
-    if (!appBalance) {
-      throw new Error(`No application balance record found`);
-    }
 
     const balanceAmount = Number(appBalance?.balance_amount || 0);
     console.log(`[${executionId}] 💰 Internal application balance found: $${balanceAmount.toFixed(2)} USD`);
 
     // =================== STEP 2: VALIDATE BALANCE ===================
     console.log(`[${executionId}] ✅ Step 2: Validating available balance in USD...`);
-
+    
     if (balanceAmount <= 0) {
       const summary = {
         execution_id: executionId,
@@ -72,15 +69,15 @@ serve(async (req) => {
 
     // =================== STEP 3: CREATE STRIPE CHARGE ===================
     console.log(`[${executionId}] 🚀 Step 3: Creating Stripe payout for $${balanceAmount.toFixed(2)} USD...`);
-
+    
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY not configured in environment");
     }
 
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(stripeKey, { 
       apiVersion: "2023-10-16",
-      typescript: true
+      typescript: true 
     });
 
     const amountInCents = Math.round(balanceAmount * 100);
@@ -108,12 +105,12 @@ serve(async (req) => {
       console.log(`[${executionId}] ✅ Stripe payout created successfully: ${payout.id}`);
     } catch (stripeError: any) {
       console.error(`[${executionId}] ❌ Stripe payout failed:`, stripeError);
-
+      
       // Retry logic for transient errors
       if (stripeError.type === 'api_connection_error' || stripeError.type === 'api_error') {
         console.log(`[${executionId}] 🔄 Retrying Stripe payout due to transient error...`);
         await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-
+        
         try {
           payout = await stripe.payouts.create({
             amount: amountInCents,
@@ -129,10 +126,8 @@ serve(async (req) => {
               validation_passed: 'true',
               retry_attempt: '1'
             }
-          }, {
-            idempotencyKey: `${idempotencyKey}_retry_1`
           });
-
+          
           console.log(`[${executionId}] ✅ Stripe payout created successfully on retry: ${payout.id}`);
         } catch (retryError: any) {
           throw new Error(`Stripe API failure after retry: ${retryError.message}`);
@@ -144,10 +139,10 @@ serve(async (req) => {
 
     // =================== STEP 4: UPDATE APPLICATION BALANCE ===================
     console.log(`[${executionId}] 🔄 Step 4: Updating internal application balance...`);
-
+    
     const { error: updateError } = await supabaseClient
       .from('application_balance')
-      .update({
+      .update({ 
         balance_amount: 0,
         pending_transfers: 0,
         last_updated_at: new Date().toISOString()
@@ -163,7 +158,7 @@ serve(async (req) => {
 
     // =================== STEP 5: LOG TRANSACTION ===================
     console.log(`[${executionId}] 📝 Step 5: Logging transaction with timestamps...`);
-
+    
     const { error: logError } = await supabaseClient
       .from('automated_transfer_logs')
       .insert({
@@ -232,30 +227,26 @@ serve(async (req) => {
 
   } catch (error: any) {
     const executionTimeMs = Date.now() - startTime;
-
+    
     console.error(`[${executionId}] 💥 EXECUTION FAILED:`, error);
     console.error(`[${executionId}] ⏱️ Failed after: ${executionTimeMs}ms`);
 
     // Log error
-    try {
-      await supabaseClient
-        .from('automated_transfer_logs')
-        .insert({
-          job_name: 'autonomous_balance_transfer',
-          status: 'failed',
-          execution_time: new Date().toISOString(),
+    await supabaseClient
+      .from('automated_transfer_logs')
+      .insert({
+        job_name: 'autonomous_balance_transfer',
+        status: 'failed',
+        execution_time: new Date().toISOString(),
+        error_message: error.message,
+        response: {
+          execution_id: executionId,
+          error_type: error.name || 'UnknownError',
           error_message: error.message,
-          response: {
-            execution_id: executionId,
-            error_type: error.name || 'UnknownError',
-            error_message: error.message,
-            execution_time_ms: executionTimeMs,
-            timestamp: new Date().toISOString()
-          }
-        });
-    } catch (logError) {
-      console.error(`[${executionId}] ❌ Failed to log error to database:`, logError);
-    }
+          execution_time_ms: executionTimeMs,
+          timestamp: new Date().toISOString()
+        }
+      });
 
     const errorSummary = {
       execution_id: executionId,
@@ -268,7 +259,7 @@ serve(async (req) => {
 
     console.log(`[${executionId}] 📊 ERROR SUMMARY:`, errorSummary);
 
-    return new Response(JSON.stringify({
+    return new Response(JSON.stringify({ 
       success: false,
       error: error.message,
       error_type: error.name || 'UnknownError',

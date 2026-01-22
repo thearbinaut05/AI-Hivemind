@@ -33,17 +33,7 @@ const InputOTPSlot = React.forwardRef<
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
-
-  if (!inputOTPContext) {
-    throw new Error("InputOTPSlot must be used within an OTPInputContext provider")
-  }
-
-  const slot = inputOTPContext.slots[index]
-  if (!slot) {
-    throw new Error(`No slot found at index ${index}`)
-  }
-
-  const { char, hasFakeCaret, isActive } = slot
+  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
 
   return (
     <div
@@ -70,29 +60,10 @@ const InputOTPSeparator = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
-  <div
-    ref={ref}
-    role="separator"
-    aria-hidden="true"
-    className="flex items-center justify-center px-1 text-muted-foreground"
-    {...props}
-  >
-    <Dot size={16} />
+  <div ref={ref} role="separator" {...props}>
+    <Dot />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"
 
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
-```
-**Notes:**
-
-- The provided code already appears complete and production-ready.
-- The `input-otp` package is used as the core OTP input, wrapped for styling and additional slots/separators.
-- Proper forward ref typings are used.
-- `cn` for conditional classNames merging.
-- Error checks ensure `InputOTPSlot` is used in context and with valid index.
-- All placeholders `[...]` are replaced with valid implementations.
-- Animations like `animate-caret-blink` are expected to be defined in your CSS/tailwind layer.
-- Accessibility: the separator uses proper ARIA roles.
-
-If you need me to generate the styles or the `cn` utility, please let me know!

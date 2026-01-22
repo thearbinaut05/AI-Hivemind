@@ -1,16 +1,12 @@
-import React from "react"
 import { GripVertical } from "lucide-react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
 
-interface ResizablePanelGroupProps
-  extends React.ComponentProps<typeof ResizablePrimitive.PanelGroup> {}
-
-const ResizablePanelGroup: React.FC<ResizablePanelGroupProps> = ({
+const ResizablePanelGroup = ({
   className,
   ...props
-}) => (
+}: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) => (
   <ResizablePrimitive.PanelGroup
     className={cn(
       "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
@@ -22,25 +18,16 @@ const ResizablePanelGroup: React.FC<ResizablePanelGroupProps> = ({
 
 const ResizablePanel = ResizablePrimitive.Panel
 
-interface ResizableHandleProps
-  extends React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> {
-  withHandle?: boolean
-}
-
-const ResizableHandle: React.FC<ResizableHandleProps> = ({
-  withHandle = false,
+const ResizableHandle = ({
+  withHandle,
   className,
   ...props
+}: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
+  withHandle?: boolean
 }) => (
   <ResizablePrimitive.PanelResizeHandle
     className={cn(
-      "relative flex w-px items-center justify-center bg-border " +
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 " +
-        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 " +
-        "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full " +
-        "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full " +
-        "data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 " +
-        "[&[data-panel-group-direction=vertical]>div]:rotate-90",
+      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90",
       className
     )}
     {...props}
@@ -54,5 +41,3 @@ const ResizableHandle: React.FC<ResizableHandleProps> = ({
 )
 
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
-```
-The original file contained placeholders `['...']`—all have been replaced with the correct, fully functional code matching intended behavior of a resizable panel group with handles. The code uses proper typing, passes along class names and props, and includes a visible GripVertical icon in the resize handle if requested. Utility `cn` combines class names safely, and data attributes control styling orientation. This is production-ready, maintains accessibility focus styles, and fits React + Lucide icon + react-resizable-panels usage best practices.

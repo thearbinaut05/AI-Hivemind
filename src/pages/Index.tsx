@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Zap,
-  TrendingUp,
-  DollarSign,
+import { 
+  Zap, 
+  TrendingUp, 
+  DollarSign, 
   Target,
   ArrowRight,
   Banknote,
@@ -54,50 +55,29 @@ const Index = () => {
 
   const loadStats = async () => {
     try {
-      // Get revenue stats from the RPC function
-      const { data: statsData, error: statsError } = await supabase
+      // Get revenue stats
+      const { data: statsData } = await supabase
         .rpc('get_autonomous_revenue_stats');
-
-      if (statsError) {
-        throw statsError;
-      }
-
+      
       if (statsData?.[0]) {
         const data = statsData[0];
-
-        // Query to get today's revenue by filtering transactions created today.
-        const startOfDayISO = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-        const { data: todayData, error: todayError } = await supabase
-          .from('autonomous_revenue_transactions')
-          .select('amount')
-          .gte('created_at', startOfDayISO);
-
-        if (todayError) {
-          throw todayError;
-        }
-
-        const todayRevenue = todayData?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
-
         setStats({
           totalRevenue: data.total_revenue || 0,
-          todayRevenue,
+          todayRevenue: 0, // Would need separate query for today's revenue
           activeStreams: data.active_streams || 0,
           totalTransactions: data.total_transactions || 0
         });
       }
 
       // Get recent transactions
-      const { data: transactions, error: transactionsError } = await supabase
+      const { data: transactions } = await supabase
         .from('autonomous_revenue_transactions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
-
-      if (transactionsError) {
-        throw transactionsError;
-      }
-
+      
       setRecentActivity(transactions || []);
+
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -105,21 +85,19 @@ const Index = () => {
 
   const generateRevenue = async () => {
     if (isGenerating) return;
-
+    
     setIsGenerating(true);
     try {
-      // Supabase Edge Function invocation
       const { data, error } = await supabase.functions.invoke('hyper-revenue-generator');
-
+      
       if (error) throw error;
-
+      
       if (data?.success && data.total_amount > 0) {
-        toast.success(`💰 Generated $${data.total_amount.toFixed(2)}!`);
+        toast.success(`💰 Generated $${data.total_amount?.toFixed(2)}!`);
         loadStats();
       }
     } catch (error) {
       console.error('Error generating revenue:', error);
-      toast.error('Failed to generate revenue. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -136,24 +114,18 @@ const Index = () => {
           <p className="text-xl text-slate-300 mb-8">
             24/7 AI-Powered Revenue Generation with Automatic Bank Transfers
           </p>
-
+          
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="flex items-center gap-2">
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  autoMode ? 'bg-green-400 animate-pulse' : 'bg-gray-400'
-                }`}
-              ></div>
-              <span className="text-white font-medium" aria-live="polite">
+              <div className={`w-4 h-4 rounded-full ${autoMode ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}></div>
+              <span className="text-white font-medium">
                 {autoMode ? '🔄 GENERATING REVENUE' : '⏸️ PAUSED'}
               </span>
             </div>
             <Button
               onClick={() => setAutoMode(!autoMode)}
-              variant={autoMode ? 'destructive' : 'default'}
+              variant={autoMode ? "destructive" : "default"}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
-              aria-pressed={autoMode}
-              aria-label={autoMode ? 'Pause auto generation' : 'Start auto generation'}
             >
               {autoMode ? 'Pause Auto-Generation' : 'Start Auto-Generation'}
             </Button>
@@ -161,67 +133,64 @@ const Index = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12" role="list" aria-label="Dashboard statistics">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-100">
-                Total Revenue
-              </CardTitle>
-              <DollarSign className="h-5 w-5 text-green-400" aria-hidden="true" />
+              <CardTitle className="text-sm font-medium text-green-100">Total Revenue</CardTitle>
+              <DollarSign className="h-5 w-5 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-400" tabIndex={0}>
+              <div className="text-3xl font-bold text-green-400">
                 ${stats.totalRevenue.toFixed(2)}
               </div>
-              <p className="text-green-200 text-sm mt-1">Lifetime earnings</p>
+              <p className="text-green-200 text-sm mt-1">
+                Lifetime earnings
+              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">
-                Active Streams
-              </CardTitle>
-              <TrendingUp className="h-5 w-5 text-blue-400" aria-hidden="true" />
+              <CardTitle className="text-sm font-medium text-blue-100">Active Streams</CardTitle>
+              <TrendingUp className="h-5 w-5 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-400" tabIndex={0}>
+              <div className="text-3xl font-bold text-blue-400">
                 {stats.activeStreams}
               </div>
-              <p className="text-blue-200 text-sm mt-1">Revenue sources</p>
+              <p className="text-blue-200 text-sm mt-1">
+                Revenue sources
+              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-100">
-                Transactions
-              </CardTitle>
-              <Target className="h-5 w-5 text-purple-400" aria-hidden="true" />
+              <CardTitle className="text-sm font-medium text-purple-100">Transactions</CardTitle>
+              <Target className="h-5 w-5 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-400" tabIndex={0}>
+              <div className="text-3xl font-bold text-purple-400">
                 {stats.totalTransactions}
               </div>
-              <p className="text-purple-200 text-sm mt-1">Total processed</p>
+              <p className="text-purple-200 text-sm mt-1">
+                Total processed
+              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 border-orange-500/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-100">
-                Avg/Transaction
-              </CardTitle>
-              <Banknote className="h-5 w-5 text-orange-400" aria-hidden="true" />
+              <CardTitle className="text-sm font-medium text-orange-100">Avg/Transaction</CardTitle>
+              <Banknote className="h-5 w-5 text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-400" tabIndex={0}>
-                $
-                {stats.totalTransactions > 0
-                  ? (stats.totalRevenue / stats.totalTransactions).toFixed(2)
-                  : '0.00'}
+              <div className="text-3xl font-bold text-orange-400">
+                ${stats.totalTransactions > 0 ? (stats.totalRevenue / stats.totalTransactions).toFixed(2) : '0.00'}
               </div>
-              <p className="text-orange-200 text-sm mt-1">Per transaction</p>
+              <p className="text-orange-200 text-sm mt-1">
+                Per transaction
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -232,7 +201,7 @@ const Index = () => {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
-                <Zap className="h-5 w-5 mr-2" aria-hidden="true" />
+                <Zap className="h-5 w-5 mr-2" />
                 Quick Actions
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -245,25 +214,19 @@ const Index = () => {
                 disabled={isGenerating}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                 size="lg"
-                aria-busy={isGenerating}
-                aria-live="polite"
-                aria-label="Generate revenue now"
               >
                 {isGenerating ? (
-                  <Activity className="h-5 w-5 mr-2 animate-spin" aria-hidden="true" />
+                  <Activity className="h-5 w-5 mr-2 animate-spin" />
                 ) : (
-                  <Zap className="h-5 w-5 mr-2" aria-hidden="true" />
+                  <Zap className="h-5 w-5 mr-2" />
                 )}
                 {isGenerating ? 'Generating Revenue...' : 'Generate Revenue NOW'}
               </Button>
 
-              <Link to="/revenue-dashboard" className="block" aria-label="Open Revenue Dashboard">
-                <Button
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  size="lg"
-                >
+              <Link to="/revenue-dashboard" className="block">
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" size="lg">
                   Open Revenue Dashboard
-                  <ArrowRight className="h-5 w-5 ml-2" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </Link>
             </CardContent>
@@ -273,7 +236,7 @@ const Index = () => {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
-                <Clock className="h-5 w-5 mr-2" aria-hidden="true" />
+                <Clock className="h-5 w-5 mr-2" />
                 Recent Activity
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -281,33 +244,28 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3" role="list" aria-label="Recent revenue transactions">
+              <div className="space-y-3">
                 {recentActivity.length > 0 ? (
                   recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-center justify-between p-2 bg-slate-700/30 rounded"
-                      role="listitem"
-                      tabIndex={0}
-                    >
+                    <div key={activity.id} className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
                       <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-400 mr-2" aria-hidden="true" />
+                        <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
                         <div>
                           <p className="text-white text-sm font-medium">
                             ${activity.amount.toFixed(2)}
                           </p>
                           <p className="text-slate-400 text-xs">
-                            {activity.metadata?.strategy?.replace(/_/g, ' ') || 'Revenue'}
+                            {activity.metadata?.strategy?.replace('_', ' ') || 'Revenue'}
                           </p>
                         </div>
                       </div>
-                      <Badge variant="default" className="bg-green-600 text-xs" aria-label={`Status: ${activity.status}`}>
+                      <Badge variant="default" className="bg-green-600 text-xs">
                         {activity.status}
                       </Badge>
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-400 text-center py-4" tabIndex={0}>
+                  <p className="text-slate-400 text-center py-4">
                     No recent activity. Start generating revenue!
                   </p>
                 )}
@@ -331,17 +289,3 @@ const Index = () => {
 };
 
 export default Index;
-```
----
-
-**Summary:**
-
-- All placeholders `[...]` have been replaced with complete implementations.
-- The code uses proper async handling, Supabase RPC and queries.
-- Includes accessibility improvements with ARIA roles and states.
-- Components and icons are used following best practices.
-- Error handling with `try/catch` and toasts for user feedback.
-- State management for auto-generation mode and loading indicators.
-- The code is clean, maintainable, and production ready.  
-
-If you have any questions or need further customization, just ask!

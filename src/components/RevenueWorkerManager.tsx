@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,10 @@ import {
   Zap,
   Settings,
   BarChart3,
+  ArrowUpRight,
+  Timer,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
 
 interface Worker {
@@ -19,11 +24,7 @@ interface Worker {
   worker_type: string;
   status: string;
   last_heartbeat: string;
-  metrics: {
-    tasks_completed: number;
-    revenue_processed: number;
-    efficiency_score: number;
-  };
+  metrics: any;
   config: any;
 }
 
@@ -54,64 +55,41 @@ const RevenueWorkerManager = () => {
       const interval = setInterval(autoScaleWorkers, 15000);
       return () => clearInterval(interval);
     }
-  }, [autoScale, workerPools, workers]);
+  }, [autoScale]);
 
   const loadWorkerData = async () => {
     try {
       const [workersResponse, poolsResponse] = await Promise.all([
-        supabase
-          .from('autonomous_revenue_workers')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('autonomous_revenue_worker_pool')
-          .select('*')
-          .order('worker_type')
+        supabase.from('autonomous_revenue_workers').select('*').order('created_at', { ascending: false }),
+        supabase.from('autonomous_revenue_worker_pool').select('*').order('worker_type')
       ]);
 
-      if (workersResponse.error) {
-        console.error('Error loading workers:', workersResponse.error);
-        toast.error('Failed to load workers');
-      } else {
-        setWorkers(workersResponse.data || []);
-      }
-
-      if (poolsResponse.error) {
-        console.error('Error loading worker pools:', poolsResponse.error);
-        toast.error('Failed to load worker pools');
-      } else {
-        setWorkerPools(poolsResponse.data || []);
-      }
+      setWorkers(workersResponse.data || []);
+      setWorkerPools(poolsResponse.data || []);
     } catch (error) {
       console.error('Error loading worker data:', error);
-      toast.error('Failed to load worker data');
     }
   };
 
   const autoScaleWorkers = async () => {
     try {
-      const { data: tasks, error: taskError, count } = await supabase
+      // Get pending tasks count
+      const { data: tasks } = await supabase
         .from('autonomous_revenue_task_queue')
-        .select('*', { count: 'exact' })
+        .select('*')
         .eq('status', 'pending');
 
-      if (taskError) {
-        console.error(taskError);
-        throw new Error('Failed to fetch pending tasks');
-      }
-
-      const pendingTasks = count || 0;
-
+      const pendingTasks = tasks?.length || 0;
+      
+      // Scale based on task load
       for (const pool of workerPools) {
-        // Compute optimal workers per pool based on pending tasks.
-        // For simplicity, this evenly distributes task load and sets a minimum of 1 worker.
         const optimalWorkers = Math.min(
           pool.max_workers,
-          Math.max(1, Math.ceil(pendingTasks / workerPools.length / 10))
+          Math.max(1, Math.ceil(pendingTasks / 10))
         );
 
         if (optimalWorkers !== pool.current_workers) {
-          const { error: updateError } = await supabase
+          await supabase
             .from('autonomous_revenue_worker_pool')
             .update({
               current_workers: optimalWorkers,
@@ -122,50 +100,29 @@ const RevenueWorkerManager = () => {
               }
             })
             .eq('id', pool.id);
-
-          if (updateError) {
-            console.error('Error updating worker pool:', updateError);
-            toast.error('Failed to update worker pool scaling');
-          }
         }
       }
 
-      // Reload updated pools
-      const { data: updatedPools, error: updatedPoolsError } = await supabase
-        .from('autonomous_revenue_worker_pool')
-        .select('*')
-        .order('worker_type');
-
-      if (updatedPoolsError) {
-        console.error(updatedPoolsError);
-        toast.error('Failed to reload worker pools after scaling');
-        return;
-      }
-      if (updatedPools) setWorkerPools(updatedPools);
-
-      // Calculate workers to spawn if active workers are fewer than needed
+      // Spawn new workers if needed
       const activeWorkers = workers.filter(w => w.status === 'active').length;
-      const totalOptimal = updatedPools?.reduce((sum, p) => sum + p.current_workers, 0) || 0;
+      const totalOptimal = workerPools.reduce((sum, pool) => sum + pool.current_workers, 0);
 
       if (activeWorkers < totalOptimal) {
         await spawnWorkers(totalOptimal - activeWorkers);
       }
 
-      await loadWorkerData();
-
     } catch (error) {
       console.error('Auto-scaling error:', error);
-      toast.error('Auto-scaling encountered an error');
     }
   };
 
   const spawnWorkers = async (count: number) => {
     const workerTypes = ['transfer', 'optimization', 'analysis'];
-
+    
     for (let i = 0; i < count; i++) {
       const workerType = workerTypes[i % workerTypes.length];
-
-      const { error } = await supabase
+      
+      await supabase
         .from('autonomous_revenue_workers')
         .insert({
           worker_type: workerType,
@@ -179,33 +136,22 @@ const RevenueWorkerManager = () => {
             tasks_completed: 0,
             revenue_processed: 0,
             efficiency_score: 1.0
-          },
-          created_at: new Date().toISOString()
+          }
         });
-
-      if (error) {
-        console.error('Error spawning worker:', error);
-        toast.error('Failed to spawn new worker');
-      }
     }
   };
 
   const scaleWorkerPool = async (poolId: string, direction: 'up' | 'down') => {
-    if (scaling) return; // Prevent overlapping scale requests
     setScaling(true);
     try {
       const pool = workerPools.find(p => p.id === poolId);
-      if (!pool) {
-        toast.error('Worker pool not found');
-        setScaling(false);
-        return;
-      }
+      if (!pool) return;
 
-      const newCount = direction === 'up'
+      const newCount = direction === 'up' 
         ? Math.min(pool.max_workers, pool.current_workers + 5)
         : Math.max(1, pool.current_workers - 2);
 
-      const { error } = await supabase
+      await supabase
         .from('autonomous_revenue_worker_pool')
         .update({
           current_workers: newCount,
@@ -217,18 +163,14 @@ const RevenueWorkerManager = () => {
         })
         .eq('id', poolId);
 
-      if (error) {
-        throw error;
-      }
-
-      if (direction === 'up' && newCount > pool.current_workers) {
-        await spawnWorkers(newCount - pool.current_workers);
+      if (direction === 'up') {
+        await spawnWorkers(5);
         toast.success(`Scaled up ${pool.worker_type} workers to ${newCount}`);
-      } else if (direction === 'down') {
+      } else {
         toast.success(`Scaled down ${pool.worker_type} workers to ${newCount}`);
       }
 
-      await loadWorkerData();
+      loadWorkerData();
     } catch (error) {
       console.error('Scaling error:', error);
       toast.error('Failed to scale workers');
@@ -240,9 +182,7 @@ const RevenueWorkerManager = () => {
   const totalWorkers = workers.length;
   const activeWorkers = workers.filter(w => w.status === 'active').length;
   const totalRevenue = workers.reduce((sum, w) => sum + (w.metrics?.revenue_processed || 0), 0);
-  const avgEfficiency = totalWorkers === 0
-    ? 0
-    : workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers;
+  const avgEfficiency = workers.reduce((sum, w) => sum + (w.metrics?.efficiency_score || 0), 0) / totalWorkers || 0;
 
   return (
     <div className="space-y-6">
@@ -269,6 +209,7 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
+            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <Cpu className="h-5 w-5 text-green-400 mr-2" />
@@ -278,6 +219,7 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
+            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <BarChart3 className="h-5 w-5 text-purple-400 mr-2" />
@@ -287,6 +229,7 @@ const RevenueWorkerManager = () => {
                 </div>
               </div>
             </div>
+            
             <div className="p-3 bg-slate-700/30 rounded-lg">
               <div className="flex items-center">
                 <Activity className="h-5 w-5 text-orange-400 mr-2" />
@@ -310,6 +253,7 @@ const RevenueWorkerManager = () => {
                 Auto-Scale: {autoScale ? 'ON' : 'OFF'}
               </Button>
             </div>
+            
             <Badge className={`${autoScale ? 'bg-green-600' : 'bg-gray-600'} animate-pulse`}>
               {autoScale ? 'ACTIVELY SCALING' : 'MANUAL MODE'}
             </Badge>
@@ -338,6 +282,7 @@ const RevenueWorkerManager = () => {
                       {pool.current_workers} / {pool.max_workers} workers active
                     </p>
                   </div>
+                  
                   <div className="flex space-x-2">
                     <Button
                       onClick={() => scaleWorkerPool(pool.id, 'down')}
@@ -357,10 +302,12 @@ const RevenueWorkerManager = () => {
                     </Button>
                   </div>
                 </div>
-                <Progress
-                  value={(pool.current_workers / pool.max_workers) * 100}
+                
+                <Progress 
+                  value={(pool.current_workers / pool.max_workers) * 100} 
                   className="mb-2"
                 />
+                
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Utilization: {((pool.current_workers / pool.max_workers) * 100).toFixed(1)}%</span>
                   <Badge className={pool.status === 'active' ? 'bg-green-600' : 'bg-gray-600'}>
@@ -396,6 +343,7 @@ const RevenueWorkerManager = () => {
                     {worker.status}
                   </Badge>
                 </div>
+                
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Tasks Completed</span>
@@ -426,35 +374,3 @@ const RevenueWorkerManager = () => {
 };
 
 export default RevenueWorkerManager;
-```
----
-
-### Explanation and Improvements
-
-- I replaced all `[...]` placeholders with fully implemented, production-ready logic.
-- **Load Worker Data:** Uses `supabase` to fetch workers and pools, handling errors gracefully with `toast` notifications.
-- **Auto-scaling:**
-  - Runs every 15 seconds only if autoScale is true.
-  - Computes task distribution evenly among pools.
-  - Updates pool `current_workers` and `config` with scaling info.
-  - Spawns additional workers if active workers are fewer than needed.
-- **Spawning Workers:**
-  - Inserts new workers with reasonable default config and metrics.
-- **Manual Scaling:**
-  - Prevents overlapping scaling actions.
-  - Caps scale-up/down within min/max limits.
-  - Updates pool config with manual scale flags.
-  - Spawns new workers when scaling up.
-- **UI:**
-  - Clean, responsive layout using Tailwind CSS.
-  - Meaningful icons and badges.
-  - Disabled scaling buttons when scaling or at limits.
-  - Proper date formatting and metric display.
-- **Code Practices:**
-  - Proper async/await usage.
-  - Controlled side effects in `useEffect`.
-  - Proper typings with `interface`.
-  - Error checking after all database calls.
-  - Minimal and clear state management.
-
-Should you need any adjustments or additional features, please let me know!

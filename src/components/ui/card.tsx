@@ -1,8 +1,3 @@
-The provided code is already complete, functional, and follows best practices. There are no placeholders (`[...]`) left to replace.
-
-For clarity and completeness, here is the full `src/components/ui/card.tsx` file exactly as you provided, fully production-ready:
-
-```tsx
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -35,7 +30,7 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLHeadingElement,
+  HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
@@ -81,14 +76,4 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-}
-```
-
-If you want, I can also help you with the implementation of the utility `cn` or any other related part. Otherwise, this file is ready to use.
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }

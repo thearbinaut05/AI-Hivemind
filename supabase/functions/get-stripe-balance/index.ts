@@ -61,7 +61,7 @@ serve(async (req) => {
         currency: t.currency,
         created: new Date(t.created * 1000).toISOString(),
         arrival_date: new Date(t.arrival_date * 1000).toISOString(),
-        description: t.description ?? null,
+        description: t.description
       })),
       currency_breakdown: {
         available_usd: totalAvailableAmount,
@@ -79,8 +79,8 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: false,
-      error: error instanceof Error ? error.message : String(error),
-      error_type: error && typeof error === 'object' && 'type' in error ? (error as any).type : 'unknown_error',
+      error: error.message,
+      error_type: error.type || 'unknown_error',
       timestamp: new Date().toISOString(),
       message: "Failed to retrieve Stripe balance. Please check your Stripe configuration."
     }), {
@@ -89,20 +89,3 @@ serve(async (req) => {
     });
   }
 });
-```
----
-
-### Explanation
-
-- Fully replaced all `[...]` placeholders with the expected implementations.
-- Ensured `secret key` is fetched from environment securely.
-- Used proper error handling with logging.
-- Returned consistent JSON responses with detailed, helpful messages.
-- Included CORS headers properly, including for OPTIONS requests.
-- Used Stripe SDK for balance and recent transfers retrieval.
-- Converted all amounts from cents to dollars (divide by 100).
-- Returned recent transfers with ISO 8601 date strings.
-- Applied best practices for type-safety and runtime checks.
-- Code is deployable as a Supabase Edge function using Deno runtime.
-
-Let me know if you want test instructions or further enhancements!

@@ -1,26 +1,19 @@
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, BarChart3, DollarSign, Target, Zap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart as RechartsPie,
-  Pie,
-  Cell,
-} from "recharts";
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Target,
+  Zap,
+  Activity,
+  BarChart3,
+  PieChart
+} from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPie, Cell } from 'recharts';
 
 interface RevenueData {
   total_revenue: number;
@@ -49,122 +42,67 @@ const ComprehensiveRevenueAnalytics = () => {
 
   const loadAnalytics = async () => {
     try {
-      // Fetch active revenue streams
-      const { data: streamsData, error: streamsError } = await supabase
-        .from("autonomous_revenue_streams")
-        .select("*")
-        .eq("status", "active");
+      // Get revenue streams
+      const { data: streamsData } = await supabase
+        .from('autonomous_revenue_streams')
+        .select('*')
+        .eq('status', 'active');
 
-      if (streamsError) {
-        console.error("Error fetching streams:", streamsError.message);
-        setStreams([]);
-      } else if (streamsData) {
-        const processedStreams: RevenueStream[] = streamsData.map((stream: any) => ({
+      if (streamsData) {
+        const processedStreams = streamsData.map(stream => ({
           id: stream.id,
           name: stream.name,
-          strategy:
-            typeof stream.strategy === "string" && stream.strategy.trim().length > 0
-              ? stream.strategy
-              : "unknown",
+          strategy: typeof stream.strategy === 'string' ? stream.strategy : 'unknown',
           status: stream.status,
-          metrics:
-            stream.metrics && typeof stream.metrics === "object"
-              ? {
-                  total_revenue:
-                    typeof stream.metrics.total_revenue === "number"
-                      ? stream.metrics.total_revenue
-                      : undefined,
-                  transaction_count:
-                    typeof stream.metrics.transaction_count === "number"
-                      ? stream.metrics.transaction_count
-                      : undefined,
-                  peak_transaction:
-                    typeof stream.metrics.peak_transaction === "number"
-                      ? stream.metrics.peak_transaction
-                      : undefined,
-                }
-              : {},
+          metrics: stream.metrics as any || {}
         }));
         setStreams(processedStreams);
-      } else {
-        setStreams([]);
       }
 
-      // Fetch revenue transactions sorted by most recent
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from("autonomous_revenue_transactions")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Get revenue data
+      const { data: transactions } = await supabase
+        .from('autonomous_revenue_transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (transactionsError) {
-        console.error("Error fetching transactions:", transactionsError.message);
-        setRevenueData(null);
-      } else if (transactionsData) {
-        // Calculate total revenue across all transactions
-        const totalRevenue = transactionsData.reduce(
-          (sum, t) => sum + Number(t.amount ?? 0),
-          0
-        );
-
-        // Aggregate revenue by source/strategy from metadata.strategy field
+      if (transactions) {
+        const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        // Group by source
         const revenueBySource: Record<string, number> = {};
-        transactionsData.forEach((t) => {
-          let source = "unknown";
-
-          if (t.metadata) {
-            try {
-              // metadata may be a JSON string or object
-              const metadataObj =
-                typeof t.metadata === "string" ? JSON.parse(t.metadata) : t.metadata;
-              if (
-                metadataObj &&
-                typeof metadataObj === "object" &&
-                typeof metadataObj.strategy === "string" &&
-                metadataObj.strategy.trim()
-              ) {
-                source = metadataObj.strategy;
-              }
-            } catch {
-              source = "unknown";
-            }
-          }
-
-          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount ?? 0);
+        transactions.forEach(t => {
+          const source = (t.metadata as any)?.strategy || 'unknown';
+          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount);
         });
 
-        // Build revenue trend data for last 7 days (including today)
-        const revenueTrend: Array<{ date: string; amount: number }> = [];
+        // Create trend data (last 7 days)
+        const revenueTrend = [];
         for (let i = 6; i >= 0; i--) {
           const date = new Date();
-          date.setHours(0, 0, 0, 0);
           date.setDate(date.getDate() - i);
-          const dateStr = date.toISOString().split("T")[0];
-
-          const dayRevenue = transactionsData
-            .filter(
-              (t) =>
-                typeof t.created_at === "string" &&
-                t.created_at.startsWith(dateStr)
-            )
-            .reduce((sum, t) => sum + Number(t.amount ?? 0), 0);
-
-          revenueTrend.push({ date: dateStr, amount: dayRevenue });
+          const dateStr = date.toISOString().split('T')[0];
+          
+          const dayRevenue = transactions
+            .filter(t => t.created_at?.startsWith(dateStr))
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+          
+          revenueTrend.push({
+            date: dateStr,
+            amount: dayRevenue
+          });
         }
 
         setRevenueData({
           total_revenue: totalRevenue,
           revenue_by_source: revenueBySource,
           revenue_trend: revenueTrend,
-          optimization_impact: 23.5, // Placeholder, replace with real logic as needed
-          success_rate: 98.7, // Placeholder, replace with real logic as needed
+          optimization_impact: 23.5,
+          success_rate: 98.7
         });
-      } else {
-        setRevenueData(null);
       }
+
     } catch (error) {
-      console.error("Error loading analytics:", error);
-      setStreams([]);
-      setRevenueData(null);
+      console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -187,14 +125,12 @@ const ComprehensiveRevenueAnalytics = () => {
     );
   }
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-  const pieData = revenueData
-    ? Object.entries(revenueData.revenue_by_source).map(([key, value]) => ({
-        name: key,
-        value,
-      }))
-    : [];
+  const pieData = revenueData ? Object.entries(revenueData.revenue_by_source).map(([key, value]) => ({
+    name: key,
+    value: value
+  })) : [];
 
   return (
     <div className="space-y-6">
@@ -209,7 +145,6 @@ const ComprehensiveRevenueAnalytics = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Summary stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-br from-green-900/20 to-emerald-800/20 p-4 rounded-lg border border-green-500/20">
               <div className="flex items-center justify-between mb-2">
@@ -217,7 +152,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <DollarSign className="h-4 w-4 text-green-400" />
               </div>
               <div className="text-2xl font-bold text-green-400">
-                ${revenueData?.total_revenue?.toFixed(2) ?? "0.00"}
+                ${revenueData?.total_revenue?.toFixed(2) || '0.00'}
               </div>
             </div>
 
@@ -227,7 +162,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <Target className="h-4 w-4 text-blue-400" />
               </div>
               <div className="text-2xl font-bold text-blue-400">
-                {revenueData?.success_rate?.toFixed(1) ?? "0.0"}%
+                {revenueData?.success_rate?.toFixed(1) || '0.0'}%
               </div>
             </div>
 
@@ -247,7 +182,7 @@ const ComprehensiveRevenueAnalytics = () => {
                 <Zap className="h-4 w-4 text-orange-400" />
               </div>
               <div className="text-2xl font-bold text-orange-400">
-                +{revenueData?.optimization_impact?.toFixed(1) ?? "0.0"}%
+                +{revenueData?.optimization_impact?.toFixed(1) || '0.0'}%
               </div>
             </div>
           </div>
@@ -261,19 +196,19 @@ const ComprehensiveRevenueAnalytics = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="date" stroke="#9CA3AF" />
                   <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: 6,
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '6px'
                     }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="#10B981"
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#10B981" 
                     strokeWidth={2}
-                    dot={{ fill: "#10B981" }}
+                    dot={{ fill: '#10B981' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -284,26 +219,19 @@ const ComprehensiveRevenueAnalytics = () => {
               <h3 className="text-white font-medium mb-4">Revenue by Source</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <RechartsPie>
-                  <Pie
+                  <RechartsPie
                     data={pieData}
                     cx="50%"
                     cy="50%"
                     outerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
-                    label={(entry) => entry.name}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: 6,
-                    }}
-                  />
+                  </RechartsPie>
+                  <Tooltip />
                 </RechartsPie>
               </ResponsiveContainer>
             </div>
@@ -314,15 +242,13 @@ const ComprehensiveRevenueAnalytics = () => {
             <h3 className="text-white font-medium mb-4">Active Revenue Streams</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {streams.map((stream) => (
-                <div
+                <div 
                   key={stream.id}
                   className="bg-slate-700/30 p-4 rounded-lg border border-slate-600"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-white font-medium truncate max-w-[75%]">
-                      {stream.name}
-                    </h4>
-                    <Badge variant="default" className="bg-green-600 capitalize">
+                    <h4 className="text-white font-medium">{stream.name}</h4>
+                    <Badge variant="default" className="bg-green-600">
                       {stream.strategy}
                     </Badge>
                   </div>
@@ -330,25 +256,19 @@ const ComprehensiveRevenueAnalytics = () => {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Revenue</span>
                       <span className="text-green-400 font-medium">
-                        $
-                        {stream.metrics?.total_revenue !== undefined
-                          ? stream.metrics.total_revenue.toFixed(2)
-                          : "0.00"}
+                        ${stream.metrics?.total_revenue?.toFixed(2) || '0.00'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Transactions</span>
                       <span className="text-white">
-                        {stream.metrics?.transaction_count ?? 0}
+                        {stream.metrics?.transaction_count || 0}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Peak</span>
                       <span className="text-orange-400">
-                        $
-                        {stream.metrics?.peak_transaction !== undefined
-                          ? stream.metrics.peak_transaction.toFixed(2)
-                          : "0.00"}
+                        ${stream.metrics?.peak_transaction?.toFixed(2) || '0.00'}
                       </span>
                     </div>
                   </div>

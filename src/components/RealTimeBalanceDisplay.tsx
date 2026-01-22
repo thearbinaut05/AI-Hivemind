@@ -1,15 +1,13 @@
-// src/components/RealTimeBalanceDisplay.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  DollarSign,
-  RefreshCw,
-  TrendingUp,
+import { 
+  DollarSign, 
+  RefreshCw, 
+  TrendingUp, 
   ArrowUpRight,
   Banknote,
   CreditCard,
@@ -42,62 +40,40 @@ const RealTimeBalanceDisplay = () => {
     loadBalances();
     const interval = setInterval(loadBalances, 3000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBalances = async () => {
     try {
-      setLoading(true);
-      // Fetch application balance record with id=1
-      const { data: appBalance, error: appBalanceError } = await supabase
+      // Get application balance
+      const { data: appBalance } = await supabase
         .from('application_balance')
         .select('*')
-        .eq('id', 1)
         .maybeSingle();
 
-      if (appBalanceError) {
-        throw new Error(appBalanceError.message);
-      }
-
-      // Fetch all completed autonomous revenue transactions
-      const { data: transactions, error: transactionsError } = await supabase
+      // Get total revenue from completed transactions
+      const { data: transactions } = await supabase
         .from('autonomous_revenue_transactions')
         .select('amount, status')
         .eq('status', 'completed');
 
-      if (transactionsError) {
-        throw new Error(transactionsError.message);
-      }
-
-      // Sum revenue amounts
       const totalRevenue = (transactions || []).reduce((sum, t) => sum + Number(t.amount), 0);
       const applicationBalance = appBalance?.balance_amount || 0;
       const pendingTransfers = appBalance?.pending_transfers || 0;
 
-      let stripeBalanceData: {
-        success?: boolean;
-        balance?: number;
-        available?: any[];
-        balance_unchanged?: boolean;
-        message?: string;
-      } | null = null;
-
+      // Check if we can get Stripe balance (this requires proper integration)
+      let stripeBalanceData = null;
       try {
-        // Invoke edge function to get Stripe balance
-        const { data: stripeResponse, error: stripeError } = await supabase.functions.invoke('get-stripe-balance');
-        if (!stripeError && stripeResponse?.success) {
+        const { data: stripeResponse } = await supabase.functions.invoke('get-stripe-balance');
+        if (stripeResponse?.success) {
           stripeBalanceData = stripeResponse;
         }
       } catch (error) {
-        // Known issue, silently ignore
-        // eslint-disable-next-line no-console
         console.log('Stripe balance check not available yet');
       }
 
-      // Calculate total transfer amount (application balance + total revenue)
+      // Calculate total transferable amount (application balance + revenue)
       const totalTransferAmount = applicationBalance + totalRevenue;
 
-      // Update state with fetched and calculated data
       setBalances({
         application_balance: applicationBalance,
         stripe_balance: stripeBalanceData?.balance || 0,
@@ -109,16 +85,13 @@ const RealTimeBalanceDisplay = () => {
       });
 
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Error loading balances:', error);
-      toast.error('Failed to load balances');
     } finally {
       setLoading(false);
     }
   };
 
   const refreshBalances = async () => {
-    if (refreshing) return;
     setRefreshing(true);
     await loadBalances();
     setRefreshing(false);
@@ -126,16 +99,14 @@ const RealTimeBalanceDisplay = () => {
   };
 
   const executeTransfer = async () => {
-    if (transferring) return;
     setTransferring(true);
     try {
       toast.info('📊 Step 1: Moving revenue to application balance...');
-
+      
       if (balances?.total_revenue && balances.total_revenue > 0) {
-        // Update application balance by adding total revenue
         const { error: revenueTransferError } = await supabase
           .from('application_balance')
-          .update({
+          .update({ 
             balance_amount: (balances.application_balance || 0) + balances.total_revenue,
             last_updated_at: new Date().toISOString()
           })
@@ -145,23 +116,17 @@ const RealTimeBalanceDisplay = () => {
           throw new Error(`Failed to move revenue: ${revenueTransferError.message}`);
         }
 
-        // Update all completed transactions to status 'transferred'
-        const { error: updateTransactionsError } = await supabase
+        await supabase
           .from('autonomous_revenue_transactions')
           .update({ status: 'transferred' })
           .eq('status', 'completed');
-
-        if (updateTransactionsError) {
-          throw new Error(`Failed to update transactions: ${updateTransactionsError.message}`);
-        }
       }
 
       toast.info('🏦 Step 2: Transferring to bank account...');
-      // Invoke stripe-revenue-transfer edge function
       const { data, error } = await supabase.functions.invoke('stripe-revenue-transfer');
-
+      
       if (error) throw error;
-
+      
       if (data?.success) {
         toast.success(`🎉 Successfully transferred $${data.amount?.toFixed(2)} to your bank account!`);
         await loadBalances();
@@ -171,7 +136,6 @@ const RealTimeBalanceDisplay = () => {
         toast.info(data?.message || 'No funds available for transfer');
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Transfer error:', error);
       toast.error('Transfer failed - please check your Stripe configuration');
       await loadBalances();
@@ -184,9 +148,9 @@ const RealTimeBalanceDisplay = () => {
     try {
       toast.info('🔧 Checking and fixing failed transfers...');
       const { data, error } = await supabase.functions.invoke('fix-failed-transfers');
-
+      
       if (error) throw error;
-
+      
       if (data?.success) {
         if (data.fixed > 0) {
           toast.success(`✅ Fixed ${data.fixed} failed transfers! Total recovered: $${(data.total_amount_recovered / 100).toFixed(2)}`);
@@ -198,7 +162,6 @@ const RealTimeBalanceDisplay = () => {
         toast.error(data?.message || 'Failed to fix transfers');
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Fix failed transfers error:', error);
       toast.error('Failed to run transfer fix workflow');
     }
@@ -217,17 +180,15 @@ const RealTimeBalanceDisplay = () => {
 
   return (
     <div className="space-y-4">
-      {/* Header and action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-white">Real-Time Balance Monitor</h3>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2">
           <Button
             onClick={refreshBalances}
             disabled={refreshing}
             variant="outline"
             size="sm"
             className="bg-slate-700 border-slate-600 hover:bg-slate-600"
-            aria-label="Refresh Balances"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -237,7 +198,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-orange-700 border-orange-600 hover:bg-orange-600"
-            aria-label="Fix Failed Transfers"
           >
             <Wrench className="h-4 w-4 mr-2" />
             Fix Failed
@@ -255,7 +215,6 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Full database transfer failed');
                 }
               } catch (e) {
-                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Full database transfer failed');
               }
@@ -263,7 +222,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-purple-700 border-purple-600 hover:bg-purple-600"
-            aria-label="Full Database Transfer"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Full DB Transfer
@@ -281,7 +239,6 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Aggregate transfer failed');
                 }
               } catch (e) {
-                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Aggregate transfer failed. Check Edge Function logs.');
               }
@@ -289,7 +246,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-teal-700 border-teal-600 hover:bg-teal-600"
-            aria-label="Aggregate USD Transfer"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Aggregate USD
@@ -307,7 +263,6 @@ const RealTimeBalanceDisplay = () => {
                   toast.error(data?.message || 'Payout failed');
                 }
               } catch (e) {
-                // eslint-disable-next-line no-console
                 console.error(e);
                 toast.error('Payout failed. Check Edge Function logs.');
               }
@@ -315,7 +270,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-green-700 border-green-600 hover:bg-green-600"
-            aria-label="Payout to Bank"
           >
             <ArrowUpRight className="h-4 w-4 mr-2" />
             Payout to Bank
@@ -325,7 +279,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-purple-700 border-purple-600 hover:bg-purple-600"
-            aria-label="Full Cash Out"
           >
             <Banknote className="h-4 w-4 mr-2" />
             Full Cash Out
@@ -335,7 +288,6 @@ const RealTimeBalanceDisplay = () => {
             variant="outline"
             size="sm"
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-            aria-label="Full Automation"
           >
             <Zap className="h-4 w-4 mr-2" />
             Full Automation
@@ -345,7 +297,6 @@ const RealTimeBalanceDisplay = () => {
             disabled={transferring || !balances?.transfer_ready}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             size="sm"
-            aria-label="Transfer to Bank"
           >
             {transferring ? (
               <Activity className="h-4 w-4 mr-2 animate-spin" />
@@ -357,8 +308,8 @@ const RealTimeBalanceDisplay = () => {
         </div>
       </div>
 
-      {/* Balance Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Application Balance */}
         <Card className="bg-gradient-to-br from-green-900/20 to-emerald-800/20 border-green-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-100">Application Balance</CardTitle>
@@ -374,6 +325,7 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
+        {/* Total Revenue */}
         <Card className="bg-gradient-to-br from-blue-900/20 to-cyan-800/20 border-blue-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-blue-100">Total Revenue</CardTitle>
@@ -389,6 +341,7 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
+        {/* Stripe Balance */}
         <Card className="bg-gradient-to-br from-purple-900/20 to-pink-800/20 border-purple-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-purple-100">Stripe Balance</CardTitle>
@@ -404,6 +357,7 @@ const RealTimeBalanceDisplay = () => {
           </CardContent>
         </Card>
 
+        {/* Transfer Status */}
         <Card className="bg-gradient-to-br from-orange-900/20 to-red-800/20 border-orange-500/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-orange-100">Transfer Status</CardTitle>
@@ -424,7 +378,7 @@ const RealTimeBalanceDisplay = () => {
         </Card>
       </div>
 
-      {/* Transfer Details Card */}
+      {/* Transfer Details */}
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center">
@@ -437,16 +391,16 @@ const RealTimeBalanceDisplay = () => {
             <div>
               <p className="text-slate-400 text-sm">Total Transfer Amount</p>
               <p className="text-white font-semibold">
-                ${( (balances?.application_balance || 0) + (balances?.total_revenue || 0) ).toFixed(2)}
+                ${((balances?.application_balance || 0) + (balances?.total_revenue || 0)).toFixed(2)}
               </p>
               <p className="text-xs text-slate-500">
-                App: ${(balances?.application_balance || 0).toFixed(2)} + Revenue: {(balances?.total_revenue || 0).toFixed(2)}
+                App: ${(balances?.application_balance || 0).toFixed(2)} + Revenue: ${(balances?.total_revenue || 0).toFixed(2)}
               </p>
             </div>
             <div>
               <p className="text-slate-400 text-sm">Pending Transfers</p>
               <p className="text-white font-semibold">
-                ${(typeof balances?.pending_transfers === 'number' ? balances.pending_transfers : 0).toFixed(2)}
+                ${balances?.pending_transfers?.toFixed(2) || '0.00'}
               </p>
             </div>
             <div>
@@ -465,7 +419,7 @@ const RealTimeBalanceDisplay = () => {
         </CardContent>
       </Card>
 
-      {/* Stripe Configuration Warning */}
+      {/* Stripe Configuration Notice */}
       {(!balances?.stripe_available || balances.stripe_available.length === 0) && (
         <Card className="bg-yellow-900/20 border-yellow-500/30">
           <CardContent className="p-4">
@@ -486,4 +440,3 @@ const RealTimeBalanceDisplay = () => {
 };
 
 export default RealTimeBalanceDisplay;
-```

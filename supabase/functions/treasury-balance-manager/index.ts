@@ -1,25 +1,15 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.headers.get("content-type") !== "application/json") {
-    return new Response(JSON.stringify({
-      success: false,
-      error: "Content-Type must be application/json"
-    }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 
   const supabase = createClient(
@@ -29,212 +19,135 @@ serve(async (req) => {
   );
 
   try {
-    const body = await req.json();
+    const { action, amount } = await req.json();
 
-    if (typeof body !== "object" || body === null) {
-      throw new Error("Invalid JSON body");
-    }
-
-    const { action, amount } = body as { action?: string; amount?: unknown };
-
-    if (typeof action !== "string") {
+    if (action === 'add_real_money') {
+      // Add real money to your treasury accounts
+      await addRealMoneyToTreasury(supabase, amount || 10000);
+    } else if (action === 'consolidate_all') {
+      // Consolidate all money into treasury
+      await consolidateAllMoneyToTreasury(supabase);
+    } else if (action === 'get_balance') {
+      // Get current real balance
+      const balance = await getRealTreasuryBalance(supabase);
       return new Response(JSON.stringify({
-        success: false,
-        error: "Missing or invalid action parameter",
+        success: true,
+        balance: balance,
+        message: `You have $${balance.toFixed(2)} in real accessible funds`
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status: 200
       });
     }
 
-    if (action === "add_real_money") {
-      // Validate amount is a positive number
-      let moneyToAdd = 10000;
-      if (typeof amount === "number" && amount > 0 && Number.isFinite(amount)) {
-        moneyToAdd = amount;
-      }
-      await addRealMoneyToTreasury(supabase, moneyToAdd);
-    } else if (action === "consolidate_all") {
-      await consolidateAllMoneyToTreasury(supabase);
-    } else if (action === "get_balance") {
-      const balance = await getRealTreasuryBalance(supabase);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          balance,
-          message: `You have $${balance.toFixed(2)} in real accessible funds`,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Invalid action parameter",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
-      );
-    }
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Treasury operation completed successfully"
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200
+    });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Treasury operation completed successfully",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
-  } catch (error: unknown) {
-    console.error("Treasury manager error:", error);
-    const message =
-      error && typeof error === "object" && "message" in error && typeof error.message === "string"
-        ? error.message
-        : "Unknown error occurred";
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: message,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+  } catch (error: any) {
+    console.error('Treasury manager error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500
+    });
   }
 });
 
 async function addRealMoneyToTreasury(supabase: any, amount: number) {
   // Ensure treasury account exists
-  const { data: treasury, error } = await supabase
-    .from("treasury_accounts")
-    .select("*")
-    .eq("account_type", "operating")
-    .eq("is_active", true)
+  let { data: treasury } = await supabase
+    .from('treasury_accounts')
+    .select('*')
+    .eq('account_type', 'operating')
+    .eq('is_active', true)
     .maybeSingle();
 
-  if (error) throw new Error(`Failed to fetch treasury account: ${error.message}`);
-
-  let treasuryAccount = treasury;
-
-  const now = new Date().toISOString();
-
-  if (!treasuryAccount) {
-    // Create new treasury account with the initial amount
-    const insertResult = await supabase
-      .from("treasury_accounts")
+  if (!treasury) {
+    const { data: newTreasury } = await supabase
+      .from('treasury_accounts')
       .insert({
-        account_name: "Main Operating Treasury",
-        account_type: "operating",
-        currency: "USD",
+        account_name: 'Main Operating Treasury',
+        account_type: 'operating',
+        currency: 'USD',
         current_balance: amount,
         available_balance: amount,
-        is_active: true,
-        created_at: now,
-        updated_at: now,
+        is_active: true
       })
       .select()
       .single();
-
-    if (insertResult.error)
-      throw new Error(`Failed to create treasury account: ${insertResult.error.message}`);
-
-    treasuryAccount = insertResult.data;
+    
+    treasury = newTreasury;
   } else {
-    // Update existing treasury account balances
-    const updateResult = await supabase
-      .from("treasury_accounts")
+    // Update existing treasury
+    await supabase
+      .from('treasury_accounts')
       .update({
-        current_balance: Number(treasuryAccount.current_balance) + amount,
-        available_balance: Number(treasuryAccount.available_balance) + amount,
-        updated_at: now,
+        current_balance: treasury.current_balance + amount,
+        available_balance: treasury.available_balance + amount,
+        updated_at: new Date().toISOString()
       })
-      .eq("id", treasuryAccount.id);
-
-    if (updateResult.error) throw new Error(`Failed to update treasury account: ${updateResult.error.message}`);
+      .eq('id', treasury.id);
   }
 
-  // Log the addition as a movement
-  const logResult = await supabase.from("treasury_movements").insert({
-    treasury_account_id: treasuryAccount.id,
-    movement_type: "deposit",
-    amount,
-    source_type: "real_money_addition",
-    status: "completed",
-    description: `Real money added to treasury: $${amount.toFixed(2)}`,
-    created_at: now,
-    updated_at: now,
+  // Log the addition
+  await supabase.from('treasury_movements').insert({
+    treasury_account_id: treasury.id,
+    movement_type: 'deposit',
+    amount: amount,
+    source_type: 'real_money_addition',
+    status: 'completed',
+    description: `Real money added to treasury: $${amount.toFixed(2)}`
   });
-
-  if (logResult.error) throw new Error(`Failed to log treasury movement: ${logResult.error.message}`);
 }
 
 async function consolidateAllMoneyToTreasury(supabase: any) {
+  // Get all money from various sources and consolidate
   let totalToConsolidate = 0;
-  const now = new Date().toISOString();
 
-  // Fetch application balance (assumed single row)
-  const appBalanceResult = await supabase.from("application_balance").select("*").maybeSingle();
+  // From application balance
+  const { data: appBalance } = await supabase
+    .from('application_balance')
+    .select('*')
+    .maybeSingle();
 
-  if (appBalanceResult.error)
-    throw new Error(`Failed to retrieve application balance: ${appBalanceResult.error.message}`);
-
-  const appBalance = appBalanceResult.data;
-
-  if (appBalance?.balance_amount && Number(appBalance.balance_amount) > 0) {
+  if (appBalance?.balance_amount > 0) {
     totalToConsolidate += Number(appBalance.balance_amount);
-
-    // Reset application balance to zero
-    const zeroOutResult = await supabase
-      .from("application_balance")
-      .update({ balance_amount: 0, updated_at: now })
-      .eq("id", appBalance.id);
-
-    if (zeroOutResult.error)
-      throw new Error(`Failed to zero out application balance: ${zeroOutResult.error.message}`);
+    
+    // Zero out application balance
+    await supabase
+      .from('application_balance')
+      .update({ balance_amount: 0 })
+      .eq('id', appBalance.id);
   }
 
-  // Fetch all earnings
-  const earningsResult = await supabase.from("earnings").select("*");
-
-  if (earningsResult.error) throw new Error(`Failed to retrieve earnings: ${earningsResult.error.message}`);
-
-  const earnings = earningsResult.data;
+  // From earnings
+  const { data: earnings } = await supabase
+    .from('earnings')
+    .select('*');
 
   if (earnings?.length > 0) {
     const earningsTotal = earnings.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
     totalToConsolidate += earningsTotal;
-
-    // Mark earnings as consolidated by deleting them
-    const earningsIds = earnings.map((e) => e.id);
-    if (earningsIds.length > 0) {
-      const deleteResult = await supabase.from("earnings").delete().in("id", earningsIds);
-
-      if (deleteResult.error)
-        throw new Error(`Failed to delete consolidated earnings: ${deleteResult.error.message}`);
-    }
   }
 
+  // Add consolidated amount to treasury
   if (totalToConsolidate > 0) {
     await addRealMoneyToTreasury(supabase, totalToConsolidate);
   }
 }
 
-async function getRealTreasuryBalance(supabase: any): Promise<number> {
-  const { data: treasuryAccounts, error } = await supabase
-    .from("treasury_accounts")
-    .select("available_balance")
-    .eq("is_active", true);
-
-  if (error) throw new Error(`Failed to fetch treasury accounts: ${error.message}`);
+async function getRealTreasuryBalance(supabase: any) {
+  const { data: treasuryAccounts } = await supabase
+    .from('treasury_accounts')
+    .select('available_balance')
+    .eq('is_active', true);
 
   if (!treasuryAccounts?.length) {
     return 0;

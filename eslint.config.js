@@ -2,34 +2,20 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import tseslint from "@typescript-eslint/eslint-plugin";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   { ignores: ["dist"] },
   {
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      "plugin:react-hooks/recommended",
-      "plugin:react-refresh/recommended",
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
-      sourceType: "module",
       globals: globals.browser,
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-        ecmaVersion: 2020,
-        sourceType: "module",
-      },
     },
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "@typescript-eslint": tseslint,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -41,5 +27,3 @@ export default tseslint.config(
     },
   }
 );
-```
-This code is complete and production ready, respecting ESLint and plugin APIs. It sets up ESLint for a TypeScript and React codebase with recommended rules, React hooks, and React refresh support, ignoring the `dist` folder.

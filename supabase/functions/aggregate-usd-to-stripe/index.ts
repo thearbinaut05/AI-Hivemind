@@ -24,17 +24,11 @@ serve(async (req) => {
       dry_run?: boolean;
     };
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-
-    if (!supabaseUrl || !supabaseKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: "SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -50,33 +44,21 @@ serve(async (req) => {
 
     // Fetch Stripe available USD balance
     const stripeBalance = await stripe.balance.retrieve();
-    const availableUSD = (stripeBalance.available || []).find((b: any) => b.currency.toLowerCase() === 'usd')?.amount || 0; // in cents
+    const availableUSD = (stripeBalance.available || []).find((b: any) => b.currency === 'usd')?.amount || 0; // in cents
 
     // Aggregate USD amounts across key tables
-    const [
-      appBalRes,
-      artRes,
-      cbRes,
-      caRes,
-      earnRes,
-    ] = await Promise.all([
+    const [appBalRes, artRes, cbRes, caRes, earnRes] = await Promise.all([
       supabase.from('application_balance').select('balance_amount').eq('id', 1).maybeSingle(),
       supabase.from('autonomous_revenue_transactions').select('amount,currency,status'),
       supabase.from('consolidated_balances').select('amount,currency'),
       supabase.from('consolidated_amounts').select('total_usd'),
-      supabase.from('earnings').select('amount'),
+      supabase.from('earnings').select('amount')
     ]);
-
-    if (appBalRes.error) throw appBalRes.error;
-    if (artRes.error) throw artRes.error;
-    if (cbRes.error) throw cbRes.error;
-    if (caRes.error) throw caRes.error;
-    if (earnRes.error) throw earnRes.error;
 
     const appBalance = Number(appBalRes.data?.balance_amount || 0);
 
     const artUSD = (artRes.data || [])
-      .filter((r: any) => (r.currency || 'USD').toUpperCase() === 'USD' && r.status === 'success')
+      .filter((r: any) => (r.currency || 'USD').toUpperCase() === 'USD')
       .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
     const consBalUSD = (cbRes.data || [])
@@ -89,7 +71,7 @@ serve(async (req) => {
     const earningsUSD = (earnRes.data || [])
       .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
-    const aggregateUSD = appBalance + artUSD + consBalUSD + consAmountsUSD + earningsUSD;
+    const aggregateUSD = appBalance + artUSD + consBalUSD + consAmountsUSD + earningsUSD; // dollars
     const aggregateCents = Math.max(0, Math.round(aggregateUSD * 100));
 
     // Determine transfer amount based on actual Stripe availability
@@ -136,7 +118,7 @@ serve(async (req) => {
     }
 
     // Insert transfer record (high level)
-    const insertRes = await supabase.from('autonomous_revenue_transfers').insert({
+    await supabase.from('autonomous_revenue_transfers').insert({
       amount: amountToTransferCents / 100,
       status: 'processing',
       provider: 'stripe',
@@ -147,12 +129,7 @@ serve(async (req) => {
         destination_account: DEST_ACCOUNT,
         flow: 'aggregate_usd_to_stripe',
       },
-      created_at: new Date().toISOString(),
     });
-
-    if (insertRes.error) {
-      throw insertRes.error;
-    }
 
     let transfer;
     let lastError: any;
@@ -255,4 +232,3 @@ serve(async (req) => {
     );
   }
 });
-```
