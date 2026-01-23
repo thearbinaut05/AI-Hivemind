@@ -69,14 +69,14 @@ const Index = () => {
         });
       }
 
-      // Get recent transactions
-      const { data: transactions } = await supabase
-        .from('autonomous_revenue_transactions')
-        .select('*')
+      // Get recent transfers
+      const { data: transfers } = await supabase
+        .from('autonomous_revenue_transfers')
+        .select('id, amount, status, created_at, metadata')
         .order('created_at', { ascending: false })
         .limit(5);
       
-      setRecentActivity(transactions || []);
+      setRecentActivity(transfers || []);
 
     } catch (error) {
       console.error('Error loading stats:', error);

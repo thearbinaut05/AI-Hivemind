@@ -50,13 +50,13 @@ const RealTimeBalanceDisplay = () => {
         .select('*')
         .maybeSingle();
 
-      // Get total revenue from completed transactions
-      const { data: transactions } = await supabase
-        .from('autonomous_revenue_transactions')
+      // Get total revenue from completed transfers
+      const { data: transfers } = await supabase
+        .from('autonomous_revenue_transfers')
         .select('amount, status')
         .eq('status', 'completed');
 
-      const totalRevenue = (transactions || []).reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalRevenue = (transfers || []).reduce((sum, t) => sum + Number(t.amount || 0), 0);
       const applicationBalance = appBalance?.balance_amount || 0;
       const pendingTransfers = appBalance?.pending_transfers || 0;
 
@@ -117,7 +117,7 @@ const RealTimeBalanceDisplay = () => {
         }
 
         await supabase
-          .from('autonomous_revenue_transactions')
+          .from('autonomous_revenue_transfers')
           .update({ status: 'transferred' })
           .eq('status', 'completed');
       }

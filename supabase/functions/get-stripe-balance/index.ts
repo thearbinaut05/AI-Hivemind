@@ -44,8 +44,14 @@ serve(async (req) => {
     const totalAvailableAmount = availableUSD ? availableUSD.amount / 100 : 0;
     const totalPendingAmount = pendingUSD ? pendingUSD.amount / 100 : 0;
 
-    // Get recent transfers to show activity
-    const transfers = await stripe.transfers.list({ limit: 10 });
+    // Get recent payouts to show activity
+    let recentPayouts: any[] = [];
+    try {
+      const payouts = await stripe.payouts.list({ limit: 10 });
+      recentPayouts = payouts.data;
+    } catch (e) {
+      console.log("Could not fetch payouts:", e);
+    }
     
     console.log(`✅ Stripe balance retrieved: $${totalAvailableAmount.toFixed(2)} available, $${totalPendingAmount.toFixed(2)} pending`);
 
@@ -55,13 +61,13 @@ serve(async (req) => {
       pending: totalPendingAmount,
       available: balance.available,
       pending_details: balance.pending,
-      recent_transfers: transfers.data.map(t => ({
+      recent_payouts: recentPayouts.map((t: any) => ({
         id: t.id,
         amount: t.amount / 100,
         currency: t.currency,
         created: new Date(t.created * 1000).toISOString(),
-        arrival_date: new Date(t.arrival_date * 1000).toISOString(),
-        description: t.description
+        arrival_date: t.arrival_date ? new Date(t.arrival_date * 1000).toISOString() : null,
+        status: t.status
       })),
       currency_breakdown: {
         available_usd: totalAvailableAmount,

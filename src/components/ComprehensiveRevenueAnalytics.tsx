@@ -59,20 +59,20 @@ const ComprehensiveRevenueAnalytics = () => {
         setStreams(processedStreams);
       }
 
-      // Get revenue data
-      const { data: transactions } = await supabase
-        .from('autonomous_revenue_transactions')
-        .select('*')
+      // Get revenue data from transfers
+      const { data: transfers } = await supabase
+        .from('autonomous_revenue_transfers')
+        .select('amount, status, created_at, metadata')
         .order('created_at', { ascending: false });
 
-      if (transactions) {
-        const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      if (transfers) {
+        const totalRevenue = transfers.reduce((sum, t) => sum + Number(t.amount || 0), 0);
         
         // Group by source
         const revenueBySource: Record<string, number> = {};
-        transactions.forEach(t => {
-          const source = (t.metadata as any)?.strategy || 'unknown';
-          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount);
+        transfers.forEach(t => {
+          const source = (t.metadata as any)?.strategy || 'transfer';
+          revenueBySource[source] = (revenueBySource[source] || 0) + Number(t.amount || 0);
         });
 
         // Create trend data (last 7 days)
@@ -82,9 +82,9 @@ const ComprehensiveRevenueAnalytics = () => {
           date.setDate(date.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
           
-          const dayRevenue = transactions
+          const dayRevenue = transfers
             .filter(t => t.created_at?.startsWith(dateStr))
-            .reduce((sum, t) => sum + Number(t.amount), 0);
+            .reduce((sum, t) => sum + Number(t.amount || 0), 0);
           
           revenueTrend.push({
             date: dateStr,

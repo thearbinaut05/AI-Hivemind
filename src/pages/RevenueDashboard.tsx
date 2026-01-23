@@ -72,15 +72,15 @@ const RevenueDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Calculate stats directly from transactions since RPC is failing
-      const { data: transactionsData } = await supabase
-        .from('autonomous_revenue_transactions')
-        .select('*')
+      // Calculate stats directly from transfers since RPC is failing
+      const { data: transfersData } = await supabase
+        .from('autonomous_revenue_transfers')
+        .select('id, amount, status, created_at, metadata')
         .order('created_at', { ascending: false });
 
-      if (transactionsData) {
-        const totalRevenue = transactionsData.reduce((sum, t) => sum + Number(t.amount), 0);
-        const avgTransaction = transactionsData.length > 0 ? totalRevenue / transactionsData.length : 0;
+      if (transfersData) {
+        const totalRevenue = transfersData.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const avgTransaction = transfersData.length > 0 ? totalRevenue / transfersData.length : 0;
         
         setStats({
           total_revenue: totalRevenue,
@@ -89,10 +89,17 @@ const RevenueDashboard = () => {
           top_strategy: 'content_licensing',
           top_strategy_revenue: totalRevenue * 0.3,
           avg_transaction_amount: avgTransaction,
-          total_transactions: transactionsData.length
+          total_transactions: transfersData.length
         });
 
-        setTransactions(transactionsData.slice(0, 15));
+        const mappedTransactions: RevenueTransaction[] = transfersData.slice(0, 15).map(t => ({
+          id: t.id,
+          amount: Number(t.amount || 0),
+          status: t.status,
+          created_at: t.created_at || '',
+          metadata: t.metadata
+        }));
+        setTransactions(mappedTransactions);
       }
 
       // Load revenue streams
