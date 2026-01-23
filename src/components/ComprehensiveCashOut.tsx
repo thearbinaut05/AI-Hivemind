@@ -59,9 +59,9 @@ const ComprehensiveCashOut = () => {
         .select('*')
         .maybeSingle();
 
-      // Get autonomous revenue transactions
+      // Get autonomous revenue transfers
       const { data: autonomousRevenue } = await supabase
-        .from('autonomous_revenue_transactions')
+        .from('autonomous_revenue_transfers')
         .select('amount, status, currency')
         .eq('status', 'completed');
 
