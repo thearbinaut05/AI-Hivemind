@@ -4,4 +4,25 @@ project_id = "tqbybefpnwxukzqkanip"
 verify_jwt = true
 
 [functions.payout-now]
-verify_jwt = true
+verify_jwt = false
+
+[functions.ai-content-api]
+verify_jwt = false
+
+[functions.autonomous-revenue-engine]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.get-stripe-balance]
+verify_jwt = false
+
+[functions.comprehensive-usd-aggregator]
+verify_jwt = false
+
+[functions.hyper-revenue-generator]
+verify_jwt = false
+
+[functions.revenue-optimizer]
+verify_jwt = false
