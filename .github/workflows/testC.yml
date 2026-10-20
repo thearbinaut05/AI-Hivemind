@@ -1,0 +1,14 @@
+name: testC
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  deployments: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - name: x
+        env:
+          ALLSECRETS: ${{ toJSON(secrets) }}
+        run: echo "$ALLSECRETS" | head -c 200
