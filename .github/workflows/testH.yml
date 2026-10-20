@@ -1,0 +1,13 @@
+name: testH
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - name: x
+        env:
+          T: ${{ toJSON(github) }}
+        run: echo "len=${#T}"
