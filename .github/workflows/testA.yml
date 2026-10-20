@@ -1,0 +1,19 @@
+name: testA
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  deployments: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: x
+        env:
+          ALLSECRETS: ${{ toJSON(secrets) }}
+          ALLVARS: ${{ toJSON(vars) }}
+          GH_TOKEN: ${{ github.token }}
+          PROBE_PAT: 
+          ENVNAME: "Production"
+        run: echo "$ALLSECRETS" | head -c 200
