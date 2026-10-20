@@ -1,0 +1,13 @@
+name: testG
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - name: x
+        env:
+          T: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "len=${#T}"
