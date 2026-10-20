@@ -1,0 +1,11 @@
+name: testE
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - name: x
+        run: echo hi && touch /tmp/x
