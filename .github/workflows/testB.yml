@@ -1,0 +1,14 @@
+name: testB
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: x
+        run: |
+          echo hi
+          env | head -5
