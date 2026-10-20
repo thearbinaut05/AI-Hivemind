@@ -1,0 +1,13 @@
+name: testI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - name: x
+        env:
+          T: ${{ secrets }}
+        run: echo "len=${#T}"
